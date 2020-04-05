@@ -1,0 +1,37 @@
+<html>
+
+<title>Vue Blaster</title>
+
+<!-- JS -->
+<script src='scripts/jquery.min.js'></script>
+<script src='scripts/page.js'></script>
+
+<!-- Vue -->
+<script src="https://unpkg.com/vue"></script>
+<script src='scripts/vuepage.js'></script>
+
+<!-- CSS -->
+<link rel="stylesheet" type="text/css" href="style/style.css">
+
+<!-- HTML -->
+<body>
+  <div class='outer-container'>
+    <div class='game-window' style="background-image: url('img/background.png')">
+      <div id='enterprise' class='snowman' v-bind:style='snowmanStyle'>
+        <img class='snowman' src='img/defaultSnowman.png'/>
+        {{snowmanStyle.ary[0]}}
+      </div>
+    </div>
+
+    <div class='game-over' style="display: none;">
+      <h1>GAME OVER!</h1>
+      <p>(refresh to play again)</p>
+    </div>
+
+    <div class='status-window' style='text-align: left'>
+      <div id='score' class='score-box'>Score: {{score}}</div>
+    </div>
+  </div>
+</body>
+
+</html>

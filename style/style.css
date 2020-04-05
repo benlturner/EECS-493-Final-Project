@@ -1,0 +1,47 @@
+body {
+  margin: 0;
+}
+/* Main Containers */
+.outer-container {
+  height: 90%;
+  width: 60%;
+  background: #eee;
+  border: 5px solid #ccc;
+}
+.game-window {
+  height: 90%;
+  width: 100%;
+  background-color: #222;
+  border-right: 3px solid #53f;
+  float: left;
+}
+.status-window {
+  height: 25px;
+  width: 800px;
+}
+
+/* Game Objects */
+#enterprise {
+  position: absolute;
+  display: inline-block;
+}
+.snowman {
+  height: 75px;
+  color: #fff;
+}
+.snowball{
+  position: absolute;
+}
+.snowball img {
+  height: 40px;
+}
+.projectile {
+  position: absolute;
+}
+
+/* Score Objects */
+.score-box {
+  text-align: left;
+  font-size: 42px;
+  font-weight: bold;
+}
