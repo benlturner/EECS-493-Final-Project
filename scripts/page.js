@@ -64,8 +64,6 @@ $(document).ready( function() {
   
   SNOWMAN_OBJ.snowmanStyle.top = maxSnowmanPosY
 
-  $(window).keydown(keydownRouter);
-
 // show rules first
   gwhGame.hide();
   gwhStatus.hide();
@@ -117,6 +115,7 @@ function keydownRouter(e) {
     default:
       console.log("Invalid input!");
   }
+  e.Handled = true;
 }
 
 // Check for any collisions and update/remove the appropriate object if needed
@@ -367,3 +366,21 @@ function moveSnowman(arrow) {
     break;
   }
 }
+
+/* Things we need/want
+		make everything (including movement speed) scale to the screen size.
+		detecting enemy-player collisions better
+			only need to cheeck that they are below a y-value threshold and overlapping horizontally with player
+		destructible bunkers (each is an image broken into multiple vertical cuts that independently detect collisions with snowballs and enemy collisons)
+			may need to make snowball slightly smaller
+		multiple enemies
+		randomly choosing enemy to shoot projectile
+			should only bottom enemies be able to shoot like in the game?
+		random enemies like the UFO in space invaders?
+		a shop
+			lives and upgrades to firing speed or new weapons? Cosmetics?
+		the ability to move and shoot (store last two inputs and on update, execute: < + S = left and shoot, < [null] = left, < > = nothing, etc.)
+		multiple levels
+		a better rule overlay
+		a transition screen between levels
+		theme the game to UofM more? Maybe make the background more UofM, the snowman have UofM colors on its scarf etc.
