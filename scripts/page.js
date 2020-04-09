@@ -51,20 +51,29 @@ $(document).ready( function() {
   // Set global positions
   maxSnowmanPosX = gwhGame.width() - snowman.width();
   maxSnowmanPosY = gwhGame.height() - snowman.height();
-  
+
   SNOWMAN_OBJ.snowmanStyle.top = maxSnowmanPosY
 
-  $(window).keydown(keydownRouter);
+  // show rules first
+  gwhGame.hide();
+  gwhStatus.hide();
+  setTimeout(function () {
+    $('#splashscreen').hide();
+    gwhGame.show();
+    gwhStatus.show();
 
-  // Periodically check for collisions (instead of checking every position-update)
-  setInterval( function() {
-    checkCollisions();  // Remove elements if there are collisions
-  }, 100);
+    $(window).keydown(keydownRouter);
 
-  // Create a new projectile regularly
-  setInterval( function() {
-    createProjectile();
-  }, PROJECTILE_SPAWN_RATE);
+    // Periodically check for collisions (instead of checking every position-update)
+    setInterval( function() {
+      checkCollisions();  // Remove elements if there are collisions
+    }, 100);
+
+    // Create a new projectile regularly
+    setInterval( function() {
+      createProjectile();
+    }, PROJECTILE_SPAWN_RATE);
+  }, 5000);
 });
 
 
@@ -109,7 +118,7 @@ function checkCollisions() {
   $('.projectile').each( function() {
     var $curProjectile = $(this);
     if (isColliding($curProjectile, snowman)) {
- 
+
       // Remove all game elements
       snowman.remove();
       $('.snowball').remove();  // remove all snowballs
