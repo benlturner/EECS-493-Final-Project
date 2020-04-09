@@ -385,3 +385,4 @@ function moveSnowman(arrow) {
 		a better rule overlay
 		a transition screen between levels
 		theme the game to UofM more? Maybe make the background more UofM, the snowman have UofM colors on its scarf etc.
+		comment everything, remove useless code, replace magic numbers with variables
