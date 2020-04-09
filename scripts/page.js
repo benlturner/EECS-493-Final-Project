@@ -128,7 +128,7 @@ function checkCollisions() {
   $('.projectile').each( function() {
     var $curProjectile = $(this);
     if (isColliding($curProjectile, snowman)) {
- 
+
       // Remove all game elements
       snowman.remove();
       $('.snowball').remove();  // remove all snowballs
@@ -194,8 +194,8 @@ function createEnemies(enemySize) {
 			gwhGame.append(enemyDivStr);
 			var $curEnemy = $('#e-'+enemyIdx);
 			$curEnemy.css('position',"absolute");
-			$curEnemy.css('left', i * enemyOffset + "px");
-			$curEnemy.css('top', j * enemyOffset + "px");
+			$curEnemy.css('left', (5 + (i * enemyOffset)) + "px");
+			$curEnemy.css('top', (5 + (j * enemyOffset)) + "px");
 			$curEnemy.css('width', enemySize + "px");
 			$curEnemy.css('height', enemySize + "px");
 			$curEnemy.append("<img src='img/snowman.png' height ='" + enemySize + " width =" + enemySize + "'/>");
