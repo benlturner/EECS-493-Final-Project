@@ -376,6 +376,7 @@ function moveSnowman(arrow) {
 		multiple enemies
 		randomly choosing enemy to shoot projectile
 			should only bottom enemies be able to shoot like in the game?
+				if we wanted this, we would keep track of each collumn of enemies' lowest member and on death, would update.
 		random enemies like the UFO in space invaders?
 		a shop
 			lives and upgrades to firing speed or new weapons? Cosmetics?
