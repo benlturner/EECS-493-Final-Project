@@ -3,6 +3,7 @@
 // Counters
 var snowballIdx   = 1;
 var projectileIdx = 1;
+var enemyIdx = 1;
 
 // Size Constants
 var MAX_PROJECTILE_SIZE   = 50;
@@ -33,6 +34,9 @@ var KEYS = {
   spacebar: 32
 }
 
+// Temporary Storage of Level Data
+var 	ENEMY_PATTERN = [11,5,12] // scale
+
 ////  Functional Code  ////
 
 // Main
@@ -50,21 +54,36 @@ $(document).ready( function() {
 
   // Set global positions
   maxSnowmanPosX = gwhGame.width() - snowman.width();
-  maxSnowmanPosY = gwhGame.height() - snowman.height();
+  maxSnowmanPosY = gwhGame.height()- 75;
   
   SNOWMAN_OBJ.snowmanStyle.top = maxSnowmanPosY
 
   $(window).keydown(keydownRouter);
 
-  // Periodically check for collisions (instead of checking every position-update)
-  setInterval( function() {
-    checkCollisions();  // Remove elements if there are collisions
-  }, 100);
+// show rules first
+  gwhGame.hide();
+  gwhStatus.hide();
+  setTimeout(function () {
+    $('#splashscreen').hide();
+    gwhGame.show();
+    gwhStatus.show();
+
+    $(window).keydown(keydownRouter);
+
+    // Periodically check for collisions (instead of checking every position-update)
+    setInterval( function() {
+      checkCollisions();  // Remove elements if there are collisions
+    }, 100);
+	// Create 
+  var 	enemySize = gwhGame.width() / (2*(ENEMY_PATTERN[0] + 1));
+	createEnemies(enemySize);
+  },5000)
+  
 
   // Create a new projectile regularly
-  setInterval( function() {
-    createProjectile();
-  }, PROJECTILE_SPAWN_RATE);
+  //setInterval( function() {
+  //  createProjectile();
+  //}, PROJECTILE_SPAWN_RATE);
 });
 
 
@@ -159,6 +178,34 @@ function isColliding(o1, o2) {
 function getRandomColor() {
   // Return a random color. Note that we don't check to make sure the color does not match the background
   return '#' + (Math.random()*0xFFFFFF<<0).toString(16);
+}
+
+// Handles enemy creation
+function createEnemies(enemySize) {
+	console.log('Spawning enemies...');
+	var enemyOffset = 2*enemySize;
+	var enemyX = 0;
+	var enemyY = 0;
+	var i;
+	for (i = 0; i < ENEMY_PATTERN[0]; i++) {
+		var j;
+		for (j = 0; j < ENEMY_PATTERN[1]; j++) {
+			var enemyDivStr = "<div id='e-" + enemyIdx + "' class='enemy'></div>"
+			gwhGame.append(enemyDivStr);
+			var $curEnemy = $('#e-'+enemyIdx);
+			$curEnemy.css('position',"absolute");
+			$curEnemy.css('left', i * enemyOffset + "px");
+			$curEnemy.css('top', j * enemyOffset + "px");
+			$curEnemy.css('width', enemySize + "px");
+			$curEnemy.css('height', enemySize + "px");
+			$curEnemy.append("<img src='img/snowman.png' height ='" + enemySize + " width =" + enemySize + "'/>");
+			$curEnemy.children('img').attr('position', 'absolute');
+			console.log(i);
+			console.log(j);
+			console.log(enemyIdx);
+			enemyIdx++;
+		}
+	}
 }
 
 // Handle projectile creation events
