@@ -12,12 +12,14 @@ var PROJECTILE_SIZE     = 40;
 var PROJECTILE_SPEED      = 5;
 var SNOWBALL_SPEED        = 10;
 var SNOWMAN_SPEED          = 25;
+var ENEMY_SPEED = 1;
+var ENEMY_DIRECTION = "right";
 var OBJECT_REFRESH_RATE = 50;    // ms
 var SCORE_UNIT          = 100;   // scoring is in 100-point units
 var PROJECTILE_SPAWN_RATE = 1000;  // ms
 
 // Size vars
-var maxSnowmanPosX, maxSnowmanPosY;
+var maxSnowmanPosX, maxSnowmanPosY, maxEnemyPosX;
 
 // Global Window Handles (gwh__)  --> replaced with Vue.js
 var gwhGame, gwhOver, gwhStatus;
@@ -53,7 +55,7 @@ $(document).ready( function() {
   snowman   = $('#enterprise');  // set the global snowman handle
 
   // Set global positions
-  maxSnowmanPosX = gwhGame.width() - snowman.width();
+  maxSnowmanPosX = gwhGame.width() - snowman.width() - 5;
   maxSnowmanPosY = gwhGame.height()- 75;
   
   SNOWMAN_OBJ.snowmanStyle.top = maxSnowmanPosY
@@ -74,10 +76,15 @@ $(document).ready( function() {
     setInterval( function() {
       checkCollisions();  // Remove elements if there are collisions
     }, 100);
-	// Create 
-  var 	enemySize = gwhGame.width() / (2*(ENEMY_PATTERN[0] + 1));
+	// Move enemies
+	// Create enemies 
+	var 	enemySize = gwhGame.width() / (2*(ENEMY_PATTERN[0] + 1));
+	maxEnemyPosX = gwhGame.width() - enemySize - 5;
 	createEnemies(enemySize);
-  },5000)
+	setInterval ( function() {
+		moveEnemies(enemySize);
+	}, 100);
+  },5)
   
 
   // Create a new projectile regularly
@@ -200,10 +207,50 @@ function createEnemies(enemySize) {
 			$curEnemy.css('height', enemySize + "px");
 			$curEnemy.append("<img src='img/snowman.png' height ='" + enemySize + " width =" + enemySize + "'/>");
 			$curEnemy.children('img').attr('position', 'absolute');
-			console.log(i);
-			console.log(j);
-			console.log(enemyIdx);
 			enemyIdx++;
+		}
+	}
+}
+
+//Handles enemy movement
+function moveEnemies(enemySize) {
+	if (ENEMY_DIRECTION === "left") {
+		$('.enemy').each( function() {
+			var $curEnemy = $(this);
+			if ((parseInt($curEnemy.css('left')) - ENEMY_SPEED) < 5) {
+				ENEMY_DIRECTION = "right";
+				ENEMY_SPEED++;
+				$('.enemy').each( function() {
+					var $curEnemy = $(this);
+					$curEnemy.css('top', parseInt($curEnemy.css('top')) + (enemySize / 4))
+				});
+				return false;
+			}
+		});
+		if (ENEMY_DIRECTION === "left") {
+			$('.enemy').each( function() {
+			var $curEnemy = $(this);
+			$curEnemy.css('left', parseInt($curEnemy.css('left')) - ENEMY_SPEED)
+			});
+		}
+	}
+	else {
+		$('.enemy').each( function() {
+			var $curEnemy = $(this);
+			if ((parseInt($curEnemy.css('left')) + ENEMY_SPEED) > maxEnemyPosX) {
+				ENEMY_DIRECTION = "left";
+				$('.enemy').each( function() {
+					var $curEnemy = $(this);
+					$curEnemy.css('top', parseInt($curEnemy.css('top')) + (enemySize / 4))
+				});
+				return false;
+			}
+		});
+		if (ENEMY_DIRECTION === "right") {
+			$('.enemy').each( function() {
+			var $curEnemy = $(this);
+			$curEnemy.css('left', parseInt($curEnemy.css('left')) + ENEMY_SPEED)
+			});
 		}
 	}
 }
@@ -280,7 +327,7 @@ function fireSnowball() {
 function moveSnowman(arrow) {
   switch (arrow) {
     case KEYS.left:   // left arrow
-      SNOWMAN_OBJ.snowmanStyle.left = Math.max(0, SNOWMAN_OBJ.snowmanStyle.left - SNOWMAN_SPEED);
+      SNOWMAN_OBJ.snowmanStyle.left = Math.max(5, SNOWMAN_OBJ.snowmanStyle.left - SNOWMAN_SPEED);
     break;
     case KEYS.right:  // right arrow
       SNOWMAN_OBJ.snowmanStyle.left = Math.min(maxSnowmanPosX, SNOWMAN_OBJ.snowmanStyle.left + SNOWMAN_SPEED);
