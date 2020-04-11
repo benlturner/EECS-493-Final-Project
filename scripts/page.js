@@ -17,7 +17,7 @@ var ENEMY_SPEED = 1;
 var ENEMY_DIRECTION = "right";
 var OBJECT_REFRESH_RATE = 50;    // ms
 var SCORE_UNIT          = 100;   // scoring is in 100-point units
-var PROJECTILE_SPAWN_RATE = 1000;  // ms
+var PROJECTILE_SPAWN_RATE = 1500;  // ms
 var SNOWBALL_RECHARGE = 500;
 var SNOWBALL_TIMER = 0;
 
@@ -40,8 +40,8 @@ var KEYS = {
 }
 
 // Temporary Storage of Level Data
-var 	ENEMY_PATTERN = [11,4,12] // scale
-var threshold = Math.ceil(ENEMY_DOUBLE_RATIO * ENEMY_PATTERN[2] * ENEMY_PATTERN[1]);
+var ENEMY_PATTERN = [7,1,1] // scale
+var NUM_ENEMIES = ENEMY_PATTERN[1] * ENEMY_PATTERN[0]
 
 ////  Functional Code  ////
 
@@ -63,6 +63,7 @@ $(document).ready( function() {
   maxSnowmanPosY = gwhGame.height()- 75;
   
   SNOWMAN_OBJ.snowmanStyle.top = maxSnowmanPosY
+  $(window).keydown(keydownRouter);
 
 // show rules first
   gwhGame.hide();
@@ -72,31 +73,32 @@ $(document).ready( function() {
     gwhGame.show();
     gwhStatus.show();
 
-    $(window).keydown(keydownRouter);
-
     // Periodically check for collisions (instead of checking every position-update)
     setInterval( function() {
       checkCollisions();  // Remove elements if there are collisions
     }, 100);
-	// Update Snowball reload
-	setInterval (function() {
-		SNOWBALL_TIMER = SNOWBALL_TIMER + 100;
-	},100);
-	// Create enemies 
-	var 	enemySize = gwhGame.width() / (2*(ENEMY_PATTERN[0] + 1));
-	maxEnemyPosX = gwhGame.width() - enemySize - 5;
-	createEnemies(enemySize);
-	// Move enemies
-	setInterval ( function() {
-		moveEnemies(enemySize);
-	}, 100);
-  },5)
-  
 
-  // Create a new projectile regularly
-  //setInterval( function() {
-  //  createProjectile();
-  //}, PROJECTILE_SPAWN_RATE);
+    // Update Snowball reload
+    setInterval (function() {
+      SNOWBALL_TIMER = SNOWBALL_TIMER + 100;
+    },100);
+    // Create enemies 
+    // var enemySize = gwhGame.width() / (2*(ENEMY_PATTERN[0] + 1));
+    var enemySize = 100;
+
+    console.log(enemySize)
+    maxEnemyPosX = gwhGame.width() - enemySize - 5;
+    createEnemies(enemySize);
+    // Move enemies
+    setInterval ( function() {
+      moveEnemies(enemySize);
+    }, 100);
+
+    setInterval(function() {
+      createProjectile();
+    }, PROJECTILE_SPAWN_RATE)
+  },5)
+
 });
 
 
@@ -120,6 +122,21 @@ function keydownRouter(e) {
 
 // Check for any collisions and update/remove the appropriate object if needed
 function checkCollisions() {
+
+  $('.snowball').each( function() {
+    var $curSnowball = $(this);  // define a local handle for this rocket
+    $('.projectile').each( function() {
+      var $curProjectile = $(this);  // define a local handle for this asteroid
+
+      // For each rocket and asteroid, check for collisions
+      if (isColliding($curSnowball,$curProjectile, 0)) {
+        // If a rocket and asteroid collide, destroy both
+        $curSnowball.remove();
+        $curProjectile.remove();
+      }
+    });
+  });
+
   // First, check for snowball-enemy checkCollisions
   $('.snowball').each( function() {
     var $curSnowball = $(this);  // define a local handle for this snowball
@@ -127,26 +144,27 @@ function checkCollisions() {
       var $curEnemy = $(this);  // define a local handle for this enemy
 
       // For each snowball and enemy, check for collisions
-      if (isColliding($curSnowball,$curEnemy)) {
+      if (isColliding($curSnowball,$curEnemy, 12)) {
         // If a snowball and enemy collide, remove a ball from the enemy
         switch ($curEnemy.children('img').attr('src')) {
-			case 'img/snowman.png': {
-				$curEnemy.children('img').attr('src', 'img/snowman2balls.png');
-				$curSnowball.remove();
-				break;
-			}
-			case 'img/snowman2balls.png': {
-				$curEnemy.children('img').attr('src', 'img/snowman1ball.png');
-				$curSnowball.remove();
-				break;
-			}
-			case 'img/snowman1ball.png': {
-				$curEnemy.remove();
-				$curSnowball.remove();
-			}
-				
-			
-		}
+          case 'img/snowman.png': {
+            $curEnemy.children('img').attr('src', 'img/snowman2balls.png');
+            $curSnowball.remove();
+            $curEnemy.css('height', 60);
+            break;
+          }
+          case 'img/snowman2balls.png': {
+            $curEnemy.children('img').attr('src', 'img/snowman1ball.png');
+            $curSnowball.remove();
+            $curEnemy.css('height', 30);
+            break;
+          }
+          case 'img/snowman1ball.png': {
+            $curEnemy.remove();
+            $curSnowball.remove();
+            NUM_ENEMIES--;
+          }
+		    }
         SCORE_OBJ.score += SCORE_UNIT;
       }
     });
@@ -156,7 +174,7 @@ function checkCollisions() {
   // Next, check for enemy-snowman interactions
   $('.enemy').each( function() {
     var $curEnemy = $(this);
-    if (isColliding($curEnemy, snowman)) {
+    if (isColliding($curEnemy, snowman, 0)) {
 
       // Remove all game elements
       snowman.remove();
@@ -174,31 +192,26 @@ function checkCollisions() {
 }
 
 // Check if two objects are colliding
-function isColliding(o1, o2) {
+function isColliding(o1, o2, offset) {
   // Define input direction mappings for easier referencing
   o1D = { 'left': parseInt(o1.css('left')),
           'right': parseInt(o1.css('left')) + o1.width(),
           'top': parseInt(o1.css('top')),
           'bottom': parseInt(o1.css('top')) + o1.height()
         };
-  o2D = { 'left': parseInt(o2.css('left')),
-          'right': parseInt(o2.css('left')) + o2.width(),
+  o2D = { 'left': parseInt(o2.css('left')) + offset,
+          'right': parseInt(o2.css('left')) + o2.width() - offset,
           'top': parseInt(o2.css('top')),
-          'bottom': parseInt(o2.css('top')) + o1.height()
+          'bottom': parseInt(o2.css('top')) + o2.height()
         };
 
   // If horizontally overlapping...
-  if ( (o1D.left < o2D.left && o1D.right > o2D.left) ||
-       (o1D.left < o2D.right && o1D.right > o2D.right) ||
-       (o1D.left < o2D.right && o1D.right > o2D.left) ) {
-
-    if ( (o1D.top > o2D.top && o1D.top < o2D.bottom) ||
-         (o1D.top < o2D.top && o1D.top > o2D.bottom) ||
-         (o1D.top > o2D.top && o1D.bottom < o2D.bottom) ) {
-
-      // Collision!
-      return true;
-    }
+  if (o1D.left <= o2D.right &&
+    o1D.right >= o2D.left &&
+    o1D.top <= o2D.bottom &&
+    o1D.bottom >= o2D.top) {
+     // collision detected!
+     return true;
   }
   return false;
 }
@@ -212,7 +225,7 @@ function getRandomColor() {
 // Handles enemy creation
 function createEnemies(enemySize) {
 	console.log('Spawning enemies...');
-	var enemyOffset = 2*enemySize;
+	var enemyOffset = 1.1*enemySize;
 	var enemyX = 0;
 	var enemyY = 0;
 	var i;
@@ -236,18 +249,15 @@ function createEnemies(enemySize) {
 
 //Handles enemy movement
 function moveEnemies(enemySize) {
-	var numEnemies = 0;
 	if (ENEMY_DIRECTION === "left") {
 		$('.enemy').each( function() {
-			numEnemies++;
 			var $curEnemy = $(this);
 			if ((parseInt($curEnemy.css('left')) - ENEMY_SPEED) < 5) {
 				ENEMY_DIRECTION = "right";
 				$('.enemy').each( function() {
 					var $curEnemy = $(this);
-					$curEnemy.css('top', parseInt($curEnemy.css('top')) + (enemySize / 4))
+					$curEnemy.css('top', parseInt($curEnemy.css('top')) + (enemySize / 16))
 				});
-				numEnemies = 1000;
 				return false;
 			}
 		});
@@ -260,15 +270,13 @@ function moveEnemies(enemySize) {
 	}
 	else {
 		$('.enemy').each( function() {
-			numEnemies++;
 			var $curEnemy = $(this);
 			if ((parseInt($curEnemy.css('left')) + ENEMY_SPEED) > maxEnemyPosX) {
 				ENEMY_DIRECTION = "left";
 				$('.enemy').each( function() {
 					var $curEnemy = $(this);
-					$curEnemy.css('top', parseInt($curEnemy.css('top')) + (enemySize / 2))
+					$curEnemy.css('top', parseInt($curEnemy.css('top')) + (enemySize / 16))
 				});
-				numEnemies = 1000;
 				return false;
 			}
 		});
@@ -279,10 +287,9 @@ function moveEnemies(enemySize) {
 			});
 		}
 	}
-	if (numEnemies < threshold) {
+	if (NUM_ENEMIES < 4) {
 		ENEMY_SPEED = ENEMY_SPEED*2;
 		console.log(ENEMY_SPEED);
-		threshold = Math.ceil(threshold*ENEMY_DOUBLE_RATIO);
 	}
 }
 
@@ -300,20 +307,37 @@ function createProjectile() {
   projectileIdx++;  // update the index to maintain uniqueness next time
 
   // Set size of the projectile (semi-randomized)
+  var projectileEnemyID = Math.floor(Math.random() * NUM_ENEMIES);   
   var astrSize = (MAX_PROJECTILE_SIZE + MIN_PROJECTILE_SIZE)/2;
   $curProjectile.css('width', astrSize+"px");
   $curProjectile.css('height', astrSize+"px");
+
   if(Math.random() > 0.5){
     $curProjectile.append("<img src='img/blueBook.png' height='" + astrSize + "'/>")
   } else {
     $curProjectile.append("<img src='img/icicle.png' height='" + astrSize + "'/>")
   }
 
+  var index = 0
+  let startingPositionLeft;
+  let startingPositionBottom;
+  $('.enemy').each( function() {
+    var $curEnemy = $(this);
+    if(index === projectileEnemyID){
+      startingPositionLeft = parseInt($curEnemy.css('left')) + parseInt($curEnemy.css('width'))/2.5
+      console.log(startingPositionLeft)
+      startingPositionBottom = parseInt($curEnemy.css('top')) + parseInt($curEnemy.css('height'))
+      console.log(startingPositionBottom)
+    }
+    index++
+  });
+
   // Pick a random starting position within the game window
-  var startingPosition = Math.random() * (gwhGame.width()-astrSize);  // Using 50px as the size of the projectile (since no instance exists yet)
+   // Using 50px as the size of the projectile (since no instance exists yet)
 
   // Set the instance-specific properties
-  $curProjectile.css('left', startingPosition+"px");
+  $curProjectile.css('left', startingPositionLeft+"px");
+  $curProjectile.css('top', startingPositionBottom+"px");
 
   // Make the projectiles fall towards the bottom
   setInterval( function() {
@@ -335,19 +359,25 @@ function fireSnowball() {
   gwhGame.append(snowballDivStr);
   // Create and snowball handle based on newest index
   var curSnowball = $('#r-'+snowballIdx);
+  let curImg = $('#r-'+snowballIdx + ' img');
   snowballIdx++;  // update the index to maintain uniqueness next time
 
   // Set vertical position
   curSnowball.css('top', SNOWMAN_OBJ.snowmanStyle.top);
   // Set horizontal position
-  var rxPos = SNOWMAN_OBJ.snowmanStyle.left;  // In order to center the snowball, shift by half the div size (recall: origin [0,0] is top-left of div)
+  var rxPos = SNOWMAN_OBJ.snowmanStyle.left + snowman.width()/4;  // In order to center the snowball, shift by half the div size (recall: origin [0,0] is top-left of div)
   curSnowball.css('left', rxPos+"px");
+  curSnowball.css('height', "20px");
+  curSnowball.css('width', "20px");
+  curImg.css('height', "20px");
+  curImg.css('width', "20px");
+
 
   // Create movement update handler
   setInterval( function() {
     curSnowball.css('top', parseInt(curSnowball.css('top'))-SNOWBALL_SPEED);
     // Check to see if the snowball has left the game/viewing window
-    if (parseInt(curSnowball.css('top')) < curSnowball.height()) {
+    if (parseInt(curSnowball.css('top')) < 0) {
       //curSnowball.hide();
       curSnowball.remove();
     }
@@ -386,3 +416,4 @@ function moveSnowman(arrow) {
 		a transition screen between levels
 		theme the game to UofM more? Maybe make the background more UofM, the snowman have UofM colors on its scarf etc.
 		comment everything, remove useless code, replace magic numbers with variables
+*/
