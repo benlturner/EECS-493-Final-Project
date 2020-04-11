@@ -397,16 +397,26 @@ function moveSnowman(arrow) {
   }
 }
 
+/* Things currently being worked on
+    points for hitting projectile
+    hit box for projectile and player
+    destructible bunkers (each is an image broken into multiple vertical cuts that independently detect collisions with snowballs and enemy collisons)
+      may need to make snowball slightly smaller
+*/
+
+
 /* Things we need/want
 		make everything (including movement speed) scale to the screen size.
-		detecting enemy-player collisions better
+		[x] detecting enemy-player collisions better
 			only need to cheeck that they are below a y-value threshold and overlapping horizontally with player
 		destructible bunkers (each is an image broken into multiple vertical cuts that independently detect collisions with snowballs and enemy collisons)
-			may need to make snowball slightly smaller
-		multiple enemies
-		randomly choosing enemy to shoot projectile
+      may need to make snowball slightly smaller
+    if number is equal to zero, end the level
+    if enemy 'top' gets to where the player is, game over
+		[x] multiple enemies
+		[x] randomly choosing enemy to shoot projectile
 			should only bottom enemies be able to shoot like in the game?
-				if we wanted this, we would keep track of each collumn of enemies' lowest member and on death, would update.
+				if we wanted this, we would keep track of each column of enemies' lowest member and on death, would update.
 		random enemies like the UFO in space invaders?
 		a shop
 			lives and upgrades to firing speed or new weapons? Cosmetics?
