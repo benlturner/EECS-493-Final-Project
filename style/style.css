@@ -3,21 +3,21 @@ body {
 }
 /* Main Containers */
 .outer-container {
-  height: 90%;
-  width: 60%;
+  height: 600px;
+  width: 900px;
   background: #eee;
   border: 5px solid #ccc;
 }
 .game-window {
-  height: 90%;
+  height: 550px;
   width: 100%;
   background-color: #222;
   border-right: 3px solid #53f;
   float: left;
 }
 .status-window {
-  height: 25px;
-  width: 800px;
+  height: 50px;
+  width: 100%;
 }
 
 /* Game Objects */

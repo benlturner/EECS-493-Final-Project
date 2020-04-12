@@ -14,7 +14,7 @@ var PROJECTILE_SPEED      = 5;
 var SNOWBALL_SPEED        = 10;
 var SNOWMAN_SPEED          = 25;
 var ENEMY_DOUBLE_RATIO = 0.5;
-var ENEMY_SPEED = 3;
+var ENEMY_SPEED = 2;
 var ENEMY_DIRECTION = "right";
 var OBJECT_REFRESH_RATE = 50;    // ms
 var SCORE_UNIT_PROJECTILE          = 5;   // scoring is in 100-point units
@@ -25,6 +25,10 @@ var SNOWBALL_RECHARGE = 400;
 var SNOWBALL_TIMER = 0;
 var GAME_OVER = false;
 var NUM_BUNKERS = 4;
+var CUR_LEVEL = 1;
+var LEVEL_SPEED = 2;
+var GAME_PAUSED = false;
+var ENEMY_SIZE = 100;
 
 // Size vars
 var maxSnowmanPosX, maxSnowmanPosY, maxEnemyPosX;
@@ -66,7 +70,7 @@ $(document).ready( function() {
 
   // Set global positions
   maxSnowmanPosX = gwhGame.width() - snowman.width() - 5;
-  maxSnowmanPosY = gwhGame.height()- 75;
+  maxSnowmanPosY = gwhGame.height() - 75;
   
   SNOWMAN_OBJ.snowmanStyle.top = maxSnowmanPosY
   $(window).keydown(keydownRouter);
@@ -90,18 +94,16 @@ $(document).ready( function() {
     },100);
     // Create enemies 
 
-    var enemySize = 100;
-
-    console.log(enemySize)
-    maxEnemyPosX = gwhGame.width() - enemySize - 5;
-    createEnemies(enemySize);
+    maxEnemyPosX = gwhGame.width() - ENEMY_SIZE - 5;
+    createEnemies();
     createBunkers();
     // Move enemies
     let mv_en_id = setInterval ( function() {
-      moveEnemies(enemySize);
+      moveEnemies();
       if (NUM_ENEMIES === 0) {
-        GAME_OVER = true;
+        newLevel()
       }
+
       if (GAME_OVER) {
         // Remove all game elements
         snowman.remove();
@@ -152,132 +154,129 @@ function keydownRouter(e) {
 // Check for any collisions and update/remove the appropriate object if needed
 function checkCollisions() {
 
-  // First, check for snow-ball projectile interactions
-  $('.snowball').each( function() {
-    var $curSnowball = $(this);  // define a local handle for this rocket
-    $('.projectile').each( function() {
-      var $curProjectile = $(this);  // define a local handle for this asteroid
+  if(!GAME_PAUSED){
+    // First, check for snow-ball projectile interactions
+    $('.snowball').each( function() {
+      var $curSnowball = $(this);  // define a local handle for this rocket
+      $('.projectile').each( function() {
+        var $curProjectile = $(this);  // define a local handle for this asteroid
 
-      // For each rocket and asteroid, check for collisions
-      if (isColliding($curSnowball, $curProjectile, 0)) {
-        // If a rocket and asteroid collide, destroy both
-        $curSnowball.remove();
-        $curProjectile.remove();
-        SCORE_OBJ.score += SCORE_UNIT_PROJECTILE;
-      }
+        // For each rocket and asteroid, check for collisions
+        if (isColliding($curSnowball, $curProjectile, 0)) {
+          // If a rocket and asteroid collide, destroy both
+          $curSnowball.remove();
+          $curProjectile.remove();
+          SCORE_OBJ.score += SCORE_UNIT_PROJECTILE;
+        }
+      });
     });
-  });
 
-  // Next, check for snowball-enemy interactions
-  $('.snowball').each( function() {
-    var $curSnowball = $(this);  // define a local handle for this snowball
-    $('.enemy').each( function() {
-      var $curEnemy = $(this);  // define a local handle for this enemy
+    // Next, check for snowball-enemy interactions
+    $('.snowball').each( function() {
+      var $curSnowball = $(this);  // define a local handle for this snowball
+      $('.enemy').each( function() {
+        var $curEnemy = $(this);  // define a local handle for this enemy
 
-      // For each snowball and enemy, check for collisions
-      if (isColliding($curSnowball, $curEnemy, 12)) {
-        // If a snowball and enemy collide, remove a ball from the enemy
-        switch ($curEnemy.children('img').attr('src')) {
-          case 'img/snowman.png': {
-            $curEnemy.children('img').attr('src', 'img/snowman2balls.png');
-            $curSnowball.remove();
-            $curEnemy.css('height', 60);
-            SCORE_OBJ.score += SCORE_UNIT_HIT;
-            break;
-          }
-          case 'img/snowman2balls.png': {
-            $curEnemy.children('img').attr('src', 'img/snowman1ball.png');
-            $curSnowball.remove();
-            $curEnemy.css('height', 30);
-            SCORE_OBJ.score += SCORE_UNIT_HIT;
-            break;
-          }
-          case 'img/snowman1ball.png': {
-            $curEnemy.remove();
-            $curSnowball.remove();
-            NUM_ENEMIES--;
-            SCORE_OBJ.score += SCORE_UNIT_KILL;
-          }
-		    }
-      }
-    });
-  });
-
-  // Next, check for snowball-gift interactions
-  $('.snowball').each( function() {
-    var $curSnowball = $(this);  // define a local handle for this snowball
-    $('.bunker').each( function() {
-      var $curBunker = $(this);  // define a local handle for this enemy
-      if (isColliding($curSnowball, $curBunker, 10)) {
-        $curSnowball.remove();
-      }
-    });
-  });
-
-  // Next, check for projectile-gift interactions
-  $('.bunker').each( function() {
-    var $curBunker = $(this);  // define a local handle for this rocket
-    $('.projectile').each( function() {
-      var $curProjectile = $(this);  // define a local handle for this asteroid
-
-      // For each projectile and bunker, check for collisions
-      if (isColliding($curBunker, $curProjectile, 10)) {
-        console.log($curBunker.children('img').attr('src'));
-        // If a projectile and bunker collide, take a layer off the bunker
-        switch ($curBunker.children('img').attr('src')) {
-          case 'img/gift.png': {
-            $curBunker.children('img').attr('src', 'img/gift1.png');
-            $curProjectile.remove();
-            let bunkerHeight = parseInt($curBunker.css('height'));
-            $curBunker.css('height', (bunkerHeight * (4/5)) + "px");
-            break;
-          }
-          case 'img/gift1.png': {
-            $curBunker.children('img').attr('src', 'img/gift2.png');
-            $curProjectile.remove();
-            let bunkerHeight = parseInt($curBunker.css('height'));
-            $curBunker.css('height', (bunkerHeight * (3/4)) + "px");
-            break;
-          }
-          case 'img/gift2.png': {
-            $curBunker.children('img').attr('src', 'img/gift3.png');
-            $curProjectile.remove();
-            let bunkerHeight = parseInt($curBunker.css('height'));
-            $curBunker.css('height', (bunkerHeight * (2/3)) + "px");
-            break;
-          }
-          case 'img/gift3.png': {
-            $curBunker.children('img').attr('src', 'img/gift4.png');
-            $curProjectile.remove();
-            let bunkerHeight = parseInt($curBunker.css('height'));
-            $curBunker.css('height', (bunkerHeight * (1/2)) + "px");
-            break;
-          }
-          case 'img/gift4.png': {
-            $curBunker.remove();
-            $curProjectile.remove();
+        // For each snowball and enemy, check for collisions
+        if (isColliding($curSnowball, $curEnemy, 12)) {
+          // If a snowball and enemy collide, remove a ball from the enemy
+          switch ($curEnemy.children('img').attr('src')) {
+            case 'img/snowman.png': {
+              $curEnemy.children('img').attr('src', 'img/snowman2balls.png');
+              $curSnowball.remove();
+              $curEnemy.css('height', 60);
+              SCORE_OBJ.score += SCORE_UNIT_HIT;
+              break;
+            }
+            case 'img/snowman2balls.png': {
+              $curEnemy.children('img').attr('src', 'img/snowman1ball.png');
+              $curSnowball.remove();
+              $curEnemy.css('height', 30);
+              SCORE_OBJ.score += SCORE_UNIT_HIT;
+              break;
+            }
+            case 'img/snowman1ball.png': {
+              $curEnemy.remove();
+              $curSnowball.remove();
+              NUM_ENEMIES--;
+              SCORE_OBJ.score += SCORE_UNIT_KILL;
+            }
           }
         }
+      });
+    });
+
+    // Next, check for snowball-gift interactions
+    $('.snowball').each( function() {
+      var $curSnowball = $(this);  // define a local handle for this snowball
+      $('.bunker').each( function() {
+        var $curBunker = $(this);  // define a local handle for this enemy
+        if (isColliding($curSnowball, $curBunker, 10)) {
+          $curSnowball.remove();
+        }
+      });
+    });
+
+    // Next, check for projectile-gift interactions
+    $('.bunker').each( function() {
+      var $curBunker = $(this);  // define a local handle for this rocket
+      $('.projectile').each( function() {
+        var $curProjectile = $(this);  // define a local handle for this asteroid
+
+        // For each projectile and bunker, check for collisions
+        if (isColliding($curBunker, $curProjectile, 10)) {
+          console.log($curBunker.children('img').attr('src'));
+          // If a projectile and bunker collide, take a layer off the bunker
+          switch ($curBunker.children('img').attr('src')) {
+            case 'img/gift.png': {
+              $curBunker.children('img').attr('src', 'img/gift1.png');
+              $curProjectile.remove();
+              let bunkerHeight = parseInt($curBunker.css('height'));
+              break;
+            }
+            case 'img/gift1.png': {
+              $curBunker.children('img').attr('src', 'img/gift2.png');
+              $curProjectile.remove();
+              break;
+            }
+            case 'img/gift2.png': {
+              $curBunker.children('img').attr('src', 'img/gift3.png');
+              $curProjectile.remove();
+              break;
+            }
+            case 'img/gift3.png': {
+              $curBunker.children('img').attr('src', 'img/gift4.png');
+              $curProjectile.remove();
+              break;
+            }
+            case 'img/gift4.png': {
+              $curBunker.remove();
+              $curProjectile.remove();
+            }
+          }
+        }
+      });
+    });
+
+
+    // Next, check for enemy-snowman interactions
+    $('.enemy').each( function() {
+      var $curEnemy = $(this);
+      if (isColliding($curEnemy, snowman, 0)) {
+        GAME_OVER = true;
       }
     });
-  });
 
+    // Next, check for projectile-snowman interactions
+    $('.projectile').each( function() {
+      var $curProjectile = $(this);
+      if (isColliding($curProjectile, snowman, 0)) {
+        GAME_OVER = true;
+      }
+    });
 
-  // Next, check for enemy-snowman interactions
-  $('.enemy').each( function() {
-    var $curEnemy = $(this);
-    if (isColliding($curEnemy, snowman, 0)) {
-      GAME_OVER = true;
-    }
-  });
-
-  // Next, check for projectile-snowman interactions
-  $('.projectile').each( function() {
-    var $curProjectile = $(this);
-    if (isColliding($curProjectile, snowman, 0)) {
-      GAME_OVER = true;
-    }
-  });
+  }
+  
 }
 
 // Check if two objects are colliding
@@ -312,9 +311,9 @@ function getRandomColor() {
 }
 
 // Handles enemy creation
-function createEnemies(enemySize) {
+function createEnemies() {
 	console.log('Spawning enemies...');
-	var enemyOffset = 1.1*enemySize;
+	var enemyOffset = 1.1*ENEMY_SIZE;
 	var enemyX = 0;
 	var enemyY = 0;
 	var i;
@@ -327,9 +326,9 @@ function createEnemies(enemySize) {
 			$curEnemy.css('position',"absolute");
 			$curEnemy.css('left', (5 + (i * enemyOffset)) + "px");
 			$curEnemy.css('top', (5 + (j * enemyOffset)) + "px");
-			$curEnemy.css('width', enemySize + "px");
-			$curEnemy.css('height', enemySize + "px");
-			$curEnemy.append("<img src='img/snowman.png' height ='" + enemySize + " width =" + enemySize + "'/>");
+			$curEnemy.css('width', ENEMY_SIZE + "px");
+			$curEnemy.css('height', ENEMY_SIZE + "px");
+			$curEnemy.append("<img src='img/snowman.png' height ='" + ENEMY_SIZE + " width =" + ENEMY_SIZE + "'/>");
 			$curEnemy.children('img').attr('position', 'absolute');
 			enemyIdx++;
 		}
@@ -360,159 +359,195 @@ function createBunkers() {
 }
 
 //Handles enemy movement
-function moveEnemies(enemySize) {
-	if (ENEMY_DIRECTION === "left") {
-		$('.enemy').each( function() {
-			var $curEnemy = $(this);
-			if ((parseInt($curEnemy.css('left')) - ENEMY_SPEED) < 5) {
-				ENEMY_DIRECTION = "right";
-				$('.enemy').each( function() {
-					var $curEnemy = $(this);
-          $curEnemy.css('top', parseInt($curEnemy.css('top')) + (enemySize / 10))
-          if (parseInt($curEnemy.css('top')) > 450) {
-            GAME_OVER = true;
-          }
-				});
-				return false;
-			}
-		});
-		if (ENEMY_DIRECTION === "left") {
-			$('.enemy').each( function() {
-			var $curEnemy = $(this);
-			$curEnemy.css('left', parseInt($curEnemy.css('left')) - ENEMY_SPEED)
-			});
-		}
-	}
-	else {
-		$('.enemy').each( function() {
-			var $curEnemy = $(this);
-			if ((parseInt($curEnemy.css('left')) + ENEMY_SPEED) > maxEnemyPosX) {
-				ENEMY_DIRECTION = "left";
-				$('.enemy').each( function() {
-					var $curEnemy = $(this);
-					$curEnemy.css('top', parseInt($curEnemy.css('top')) + (enemySize / 10))
-				});
-				return false;
-			}
-		});
-		if (ENEMY_DIRECTION === "right") {
-			$('.enemy').each( function() {
-			var $curEnemy = $(this);
-			$curEnemy.css('left', parseInt($curEnemy.css('left')) + ENEMY_SPEED)
-			});
-		}
-	}
-	if (NUM_ENEMIES < threshold) {
-		ENEMY_SPEED = ENEMY_SPEED*2;
-		console.log(ENEMY_SPEED);
-		threshold = Math.ceil(threshold*ENEMY_DOUBLE_RATIO);
-	}
+function moveEnemies() {
+  if(!GAME_PAUSED){
+    if (ENEMY_DIRECTION === "left") {
+      $('.enemy').each( function() {
+        var $curEnemy = $(this);
+        if ((parseInt($curEnemy.css('left')) - ENEMY_SPEED) < 5) {
+          ENEMY_DIRECTION = "right";
+          $('.enemy').each( function() {
+            var $curEnemy = $(this);
+            $curEnemy.css('top', parseInt($curEnemy.css('top')) + (ENEMY_SIZE / 10))
+            if (parseInt($curEnemy.css('top')) > 450) {
+              GAME_OVER = true;
+            }
+          });
+          return false;
+        }
+      });
+      if (ENEMY_DIRECTION === "left") {
+        $('.enemy').each( function() {
+        var $curEnemy = $(this);
+        $curEnemy.css('left', parseInt($curEnemy.css('left')) - ENEMY_SPEED)
+        });
+      }
+    }
+    else {
+      $('.enemy').each( function() {
+        var $curEnemy = $(this);
+        if ((parseInt($curEnemy.css('left')) + ENEMY_SPEED) > maxEnemyPosX) {
+          ENEMY_DIRECTION = "left";
+          $('.enemy').each( function() {
+            var $curEnemy = $(this);
+            $curEnemy.css('top', parseInt($curEnemy.css('top')) + (ENEMY_SIZE / 10))
+            if (parseInt($curEnemy.css('top')) > 450) {
+              GAME_OVER = true;
+            }
+          });
+          return false;
+        }
+      });
+      if (ENEMY_DIRECTION === "right") {
+        $('.enemy').each( function() {
+        var $curEnemy = $(this);
+        $curEnemy.css('left', parseInt($curEnemy.css('left')) + ENEMY_SPEED)
+        });
+      }
+    }
+    if (NUM_ENEMIES < threshold) {
+      ENEMY_SPEED = ENEMY_SPEED*2;
+      console.log(ENEMY_SPEED);
+      threshold = Math.ceil(threshold*ENEMY_DOUBLE_RATIO);
+    }
+  }	
 }
 
 // Handle projectile creation events
 function createProjectile() {
   console.log('Spawning projectile...');
 
-  // NOTE: source - http://www.clipartlord.com/wp-content/uploads/2016/04/aestroid.png
-  var projectileDivStr = "<div id='a-" + projectileIdx + "' class='projectile'></div>"
-  // Add the snowball to the screen
-  gwhGame.append(projectileDivStr);
-  // Create and projectile handle based on newest index
-  var $curProjectile = $('#a-'+projectileIdx);
+  if (!GAME_PAUSED){
+    // NOTE: source - http://www.clipartlord.com/wp-content/uploads/2016/04/aestroid.png
+    var projectileDivStr = "<div id='a-" + projectileIdx + "' class='projectile'></div>"
+    // Add the snowball to the screen
+    gwhGame.append(projectileDivStr);
+    // Create and projectile handle based on newest index
+    var $curProjectile = $('#a-'+projectileIdx);
 
-  projectileIdx++;  // update the index to maintain uniqueness next time
+    projectileIdx++;  // update the index to maintain uniqueness next time
 
-  // Set size of the projectile (semi-randomized)
-  var projectileEnemyID = Math.floor(Math.random() * NUM_ENEMIES);   
-  var astrSize = (MAX_PROJECTILE_SIZE + MIN_PROJECTILE_SIZE)/2;
-  $curProjectile.css('width', astrSize+"px");
-  $curProjectile.css('height', astrSize+"px");
+    // Set size of the projectile (semi-randomized)
+    var projectileEnemyID = Math.floor(Math.random() * NUM_ENEMIES);   
+    var astrSize = (MAX_PROJECTILE_SIZE + MIN_PROJECTILE_SIZE)/2;
+    $curProjectile.css('width', astrSize+"px");
+    $curProjectile.css('height', astrSize+"px");
 
-  if(Math.random() < 1/4){
-    $curProjectile.append("<img src='img/blueBook.png' height='" + astrSize + "'/>")
-  } else if(Math.random() < 1/2) {
-    $curProjectile.append("<img src='img/icicle.png' height='" + astrSize + "'/>")
-  } else if(Math.random() < 3/4) {
-    $curProjectile.append("<img src='img/corona.png' height='" + astrSize + "'/>")
-  } else {
-    $curProjectile.append("<img src='img/glasses.png' height='" + astrSize + "'/>")
-  } 
+    if(Math.random() < 1/4){
+      $curProjectile.append("<img src='img/blueBook.png' height='" + astrSize + "'/>")
+    } else if(Math.random() < 1/2) {
+      $curProjectile.append("<img src='img/icicle.png' height='" + astrSize + "'/>")
+    } else if(Math.random() < 3/4) {
+      $curProjectile.append("<img src='img/corona.png' height='" + astrSize + "'/>")
+    } else {
+      $curProjectile.append("<img src='img/glasses.png' height='" + astrSize + "'/>")
+    } 
 
-  var index = 0
-  let startingPositionLeft;
-  let startingPositionBottom;
-  $('.enemy').each( function() {
-    var $curEnemy = $(this);
-    if(index === projectileEnemyID){
-      startingPositionLeft = parseInt($curEnemy.css('left')) + parseInt($curEnemy.css('width'))/2.5
-      startingPositionBottom = parseInt($curEnemy.css('top')) + parseInt($curEnemy.css('height'))
-    }
-    index++
-  });
+    var index = 0
+    let startingPositionLeft;
+    let startingPositionBottom;
+    $('.enemy').each( function() {
+      var $curEnemy = $(this);
+      if(index === projectileEnemyID){
+        startingPositionLeft = parseInt($curEnemy.css('left')) + parseInt($curEnemy.css('width'))/2.5
+        startingPositionBottom = parseInt($curEnemy.css('top')) + parseInt($curEnemy.css('height'))
+      }
+      index++
+    });
 
-  // Pick a random starting position within the game window
-   // Using 50px as the size of the projectile (since no instance exists yet)
+    // Pick a random starting position within the game window
+    // Using 50px as the size of the projectile (since no instance exists yet)
 
-  // Set the instance-specific properties
-  $curProjectile.css('left', startingPositionLeft+"px");
-  $curProjectile.css('top', startingPositionBottom+"px");
+    // Set the instance-specific properties
+    $curProjectile.css('left', startingPositionLeft+"px");
+    $curProjectile.css('top', startingPositionBottom+"px");
 
-  // Make the projectiles fall towards the bottom
-  setInterval( function() {
-    $curProjectile.css('top', parseInt($curProjectile.css('top'))+PROJECTILE_SPEED);
-    // Check to see if the projectile has left the game/viewing window
-    if (parseInt($curProjectile.css('top')) > (gwhGame.height() - $curProjectile.height())) {
-      $curProjectile.remove();
-    }
-  }, OBJECT_REFRESH_RATE);
+    // Make the projectiles fall towards the bottom
+    setInterval( function() {
+      $curProjectile.css('top', parseInt($curProjectile.css('top'))+PROJECTILE_SPEED);
+      // Check to see if the projectile has left the game/viewing window
+      if (parseInt($curProjectile.css('top')) > (gwhGame.height() - $curProjectile.height())) {
+        $curProjectile.remove();
+      }
+    }, OBJECT_REFRESH_RATE);
+  }
+  
 }
 
 // Handle "fire" [snowball] events
 function fireSnowball() {
-  console.log('Firing snowball...');
+  if(!GAME_PAUSED){
+    console.log('Firing snowball...');
 
-  // NOTE: source - https://www.raspberrypi.org/learning/microbit-game-controller/images/missile.png
-  var snowballDivStr = "<div id='r-" + snowballIdx + "' class='snowball'><img src='img/snowball.png'/></div>";
-  // Add the snowball to the screen
-  gwhGame.append(snowballDivStr);
-  // Create and snowball handle based on newest index
-  var curSnowball = $('#r-'+snowballIdx);
-  let curImg = $('#r-'+snowballIdx + ' img');
-  snowballIdx++;  // update the index to maintain uniqueness next time
+    // NOTE: source - https://www.raspberrypi.org/learning/microbit-game-controller/images/missile.png
+    var snowballDivStr = "<div id='r-" + snowballIdx + "' class='snowball'><img src='img/snowball.png'/></div>";
+    // Add the snowball to the screen
+    gwhGame.append(snowballDivStr);
+    // Create and snowball handle based on newest index
+    var curSnowball = $('#r-'+snowballIdx);
+    let curImg = $('#r-'+snowballIdx + ' img');
+    snowballIdx++;  // update the index to maintain uniqueness next time
 
-  // Set vertical position
-  curSnowball.css('top', SNOWMAN_OBJ.snowmanStyle.top);
-  // Set horizontal position
-  var rxPos = SNOWMAN_OBJ.snowmanStyle.left + snowman.width()/4;  // In order to center the snowball, shift by half the div size (recall: origin [0,0] is top-left of div)
-  curSnowball.css('left', rxPos+"px");
-  curSnowball.css('height', "20px");
-  curSnowball.css('width', "20px");
-  curImg.css('height', "20px");
-  curImg.css('width', "20px");
+    // Set vertical position
+    curSnowball.css('top', SNOWMAN_OBJ.snowmanStyle.top);
+    // Set horizontal position
+    var rxPos = SNOWMAN_OBJ.snowmanStyle.left + snowman.width()/4;  // In order to center the snowball, shift by half the div size (recall: origin [0,0] is top-left of div)
+    curSnowball.css('left', rxPos+"px");
+    curSnowball.css('height', "20px");
+    curSnowball.css('width', "20px");
+    curImg.css('height', "20px");
+    curImg.css('width', "20px");
 
 
-  // Create movement update handler
-  setInterval( function() {
-    curSnowball.css('top', parseInt(curSnowball.css('top'))-SNOWBALL_SPEED);
-    // Check to see if the snowball has left the game/viewing window
-    if (parseInt(curSnowball.css('top')) < 0) {
-      //curSnowball.hide();
-      curSnowball.remove();
-    }
-  }, OBJECT_REFRESH_RATE);
-  SNOWBALL_TIMER = 0;
+    // Create movement update handler
+    setInterval( function() {
+      curSnowball.css('top', parseInt(curSnowball.css('top'))-SNOWBALL_SPEED);
+      // Check to see if the snowball has left the game/viewing window
+      if (parseInt(curSnowball.css('top')) < 0) {
+        //curSnowball.hide();
+        curSnowball.remove();
+      }
+    }, OBJECT_REFRESH_RATE);
+    SNOWBALL_TIMER = 0;
+
+  }
+  
 }
 
 // Handle snowman movement events
 function moveSnowman(arrow) {
-  switch (arrow) {
-    case KEYS.left:   // left arrow
-      SNOWMAN_OBJ.snowmanStyle.left = Math.max(5, SNOWMAN_OBJ.snowmanStyle.left - SNOWMAN_SPEED);
-    break;
-    case KEYS.right:  // right arrow
-      SNOWMAN_OBJ.snowmanStyle.left = Math.min(maxSnowmanPosX, SNOWMAN_OBJ.snowmanStyle.left + SNOWMAN_SPEED);
-    break;
+  if(!GAME_PAUSED){
+    switch (arrow) {
+      case KEYS.left:   // left arrow
+        SNOWMAN_OBJ.snowmanStyle.left = Math.max(5, SNOWMAN_OBJ.snowmanStyle.left - SNOWMAN_SPEED);
+      break;
+      case KEYS.right:  // right arrow
+        SNOWMAN_OBJ.snowmanStyle.left = Math.min(maxSnowmanPosX, SNOWMAN_OBJ.snowmanStyle.left + SNOWMAN_SPEED);
+      break;
+    }
   }
+}
+
+function newLevel(ENEMY_SIZE){
+  $('.snowball').remove();
+  $('.projectile').remove();
+  $('#splashscreen').toggle();
+  gwhGame.toggle();
+  CUR_LEVEL++;
+  LEVEL_SPEED++;
+  ENEMY_SPEED = LEVEL_SPEED;
+  PROJECTILE_SPAWN_RATE -= 50;
+  GAME_PAUSED = true
+  threshold = Math.ceil(ENEMY_DOUBLE_RATIO * ENEMY_PATTERN[2] * ENEMY_PATTERN[1]);
+  NUM_ENEMIES = ENEMY_PATTERN[1] * ENEMY_PATTERN[0]
+  createEnemies();
+  createBunkers();
+  
+  setTimeout(function() {
+    $('#splashscreen').hide();
+    gwhGame.show();       
+    GAME_PAUSED = false;
+  }, 5000)
 }
 
 /* Things added
@@ -526,21 +561,17 @@ function moveSnowman(arrow) {
     end level when enemies are eliminated
     stop intervals when level is over
       currently goes to game over screen, but when levels are added that will be easy to fix
-*/
-
-/* Things currently being worked on
-    [x] points for hitting projectile
-    [x] hit box for projectile and player
     destructible bunkers (each is an image broken into multiple vertical cuts that independently detect collisions with snowballs and enemy collisons)
       may need to make snowball slightly smaller
+    multiple levels
+    theme the game to UofM more? Maybe make the background more UofM, the snowman have UofM colors on its scarf etc.
 */
-
 
 /* Things we need/want
 		[x] make everything (including movement speed) scale to the screen size.
 		[x] detecting enemy-player collisions better
 			only need to cheeck that they are below a y-value threshold and overlapping horizontally with player
-		destructible bunkers (each is an image broken into multiple vertical cuts that independently detect collisions with snowballs and enemy collisons)
+		[x] destructible bunkers (each is an image broken into multiple vertical cuts that independently detect collisions with snowballs and enemy collisons)
       may need to make snowball slightly smaller
     [x] if number is equal to zero, end the level
     [x] if enemy 'top' gets to where the player is, game over
@@ -552,9 +583,9 @@ function moveSnowman(arrow) {
 		a shop
 			lives and upgrades to firing speed or new weapons? Cosmetics?
 		the ability to move and shoot (store last two inputs and on update, execute: < + S = left and shoot, < [null] = left, < > = nothing, etc.)
-		multiple levels
+		[x] multiple levels
 		a better rule overlay
 		a transition screen between levels
-		theme the game to UofM more? Maybe make the background more UofM, the snowman have UofM colors on its scarf etc.
+		[x] theme the game to UofM more? Maybe make the background more UofM, the snowman have UofM colors on its scarf etc.
 		comment everything, remove useless code, replace magic numbers with variables
 */
