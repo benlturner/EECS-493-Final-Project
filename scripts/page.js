@@ -4,6 +4,7 @@
 var snowballIdx   = 1;
 var projectileIdx = 1;
 var enemyIdx = 1;
+var bunkerIdx = 1;
 
 // Size Constants
 var MAX_PROJECTILE_SIZE   = 50;
@@ -13,13 +14,17 @@ var PROJECTILE_SPEED      = 5;
 var SNOWBALL_SPEED        = 10;
 var SNOWMAN_SPEED          = 25;
 var ENEMY_DOUBLE_RATIO = 0.5;
-var ENEMY_SPEED = 1;
+var ENEMY_SPEED = 3;
 var ENEMY_DIRECTION = "right";
 var OBJECT_REFRESH_RATE = 50;    // ms
-var SCORE_UNIT          = 100;   // scoring is in 100-point units
-var PROJECTILE_SPAWN_RATE = 1500;  // ms
-var SNOWBALL_RECHARGE = 500;
+var SCORE_UNIT_PROJECTILE          = 5;   // scoring is in 100-point units
+var SCORE_UNIT_HIT          = 50;   // scoring is in 100-point units
+var SCORE_UNIT_KILL          = 100;   // scoring is in 100-point units
+var PROJECTILE_SPAWN_RATE = 1200;  // ms
+var SNOWBALL_RECHARGE = 400;
 var SNOWBALL_TIMER = 0;
+var GAME_OVER = false;
+var NUM_BUNKERS = 4;
 
 // Size vars
 var maxSnowmanPosX, maxSnowmanPosY, maxEnemyPosX;
@@ -40,7 +45,8 @@ var KEYS = {
 }
 
 // Temporary Storage of Level Data
-var ENEMY_PATTERN = [7,1,1] // scale
+var ENEMY_PATTERN = [7,1,8] // scale
+var threshold = Math.ceil(ENEMY_DOUBLE_RATIO * ENEMY_PATTERN[2] * ENEMY_PATTERN[1]);
 var NUM_ENEMIES = ENEMY_PATTERN[1] * ENEMY_PATTERN[0]
 
 ////  Functional Code  ////
@@ -74,27 +80,50 @@ $(document).ready( function() {
     gwhStatus.show();
 
     // Periodically check for collisions (instead of checking every position-update)
-    setInterval( function() {
+    let ch_co_id = setInterval( function() {
       checkCollisions();  // Remove elements if there are collisions
     }, 100);
 
     // Update Snowball reload
-    setInterval (function() {
+    let rl_sb_id = setInterval (function() {
       SNOWBALL_TIMER = SNOWBALL_TIMER + 100;
     },100);
     // Create enemies 
-    // var enemySize = gwhGame.width() / (2*(ENEMY_PATTERN[0] + 1));
+
     var enemySize = 100;
 
     console.log(enemySize)
     maxEnemyPosX = gwhGame.width() - enemySize - 5;
     createEnemies(enemySize);
+    createBunkers();
     // Move enemies
-    setInterval ( function() {
+    let mv_en_id = setInterval ( function() {
       moveEnemies(enemySize);
+      if (NUM_ENEMIES === 0) {
+        GAME_OVER = true;
+      }
+      if (GAME_OVER) {
+        // Remove all game elements
+        snowman.remove();
+        $('.snowball').remove();
+        $('.projectile').remove();
+        $('.enemy').remove();
+
+        // Hide primary windows
+        gwhGame.hide();
+        gwhStatus.hide();
+  
+        // Show "Game Over" screen
+        gwhOver.show();
+  
+        clearInterval(ch_co_id);
+        clearInterval(rl_sb_id);
+        clearInterval(mv_en_id);
+        clearInterval(cr_prj_id);
+      }
     }, 100);
 
-    setInterval(function() {
+    let cr_prj_id = setInterval(function() {
       createProjectile();
     }, PROJECTILE_SPAWN_RATE)
   },5)
@@ -123,49 +152,112 @@ function keydownRouter(e) {
 // Check for any collisions and update/remove the appropriate object if needed
 function checkCollisions() {
 
+  // First, check for snow-ball projectile interactions
   $('.snowball').each( function() {
     var $curSnowball = $(this);  // define a local handle for this rocket
     $('.projectile').each( function() {
       var $curProjectile = $(this);  // define a local handle for this asteroid
 
       // For each rocket and asteroid, check for collisions
-      if (isColliding($curSnowball,$curProjectile, 0)) {
+      if (isColliding($curSnowball, $curProjectile, 0)) {
         // If a rocket and asteroid collide, destroy both
         $curSnowball.remove();
         $curProjectile.remove();
+        SCORE_OBJ.score += SCORE_UNIT_PROJECTILE;
       }
     });
   });
 
-  // First, check for snowball-enemy checkCollisions
+  // Next, check for snowball-enemy interactions
   $('.snowball').each( function() {
     var $curSnowball = $(this);  // define a local handle for this snowball
     $('.enemy').each( function() {
       var $curEnemy = $(this);  // define a local handle for this enemy
 
       // For each snowball and enemy, check for collisions
-      if (isColliding($curSnowball,$curEnemy, 12)) {
+      if (isColliding($curSnowball, $curEnemy, 12)) {
         // If a snowball and enemy collide, remove a ball from the enemy
         switch ($curEnemy.children('img').attr('src')) {
           case 'img/snowman.png': {
             $curEnemy.children('img').attr('src', 'img/snowman2balls.png');
             $curSnowball.remove();
             $curEnemy.css('height', 60);
+            SCORE_OBJ.score += SCORE_UNIT_HIT;
             break;
           }
           case 'img/snowman2balls.png': {
             $curEnemy.children('img').attr('src', 'img/snowman1ball.png');
             $curSnowball.remove();
             $curEnemy.css('height', 30);
+            SCORE_OBJ.score += SCORE_UNIT_HIT;
             break;
           }
           case 'img/snowman1ball.png': {
             $curEnemy.remove();
             $curSnowball.remove();
             NUM_ENEMIES--;
+            SCORE_OBJ.score += SCORE_UNIT_KILL;
           }
 		    }
-        SCORE_OBJ.score += SCORE_UNIT;
+      }
+    });
+  });
+
+  // Next, check for snowball-gift interactions
+  $('.snowball').each( function() {
+    var $curSnowball = $(this);  // define a local handle for this snowball
+    $('.bunker').each( function() {
+      var $curBunker = $(this);  // define a local handle for this enemy
+      if (isColliding($curSnowball, $curBunker, 10)) {
+        $curSnowball.remove();
+      }
+    });
+  });
+
+  // Next, check for projectile-gift interactions
+  $('.bunker').each( function() {
+    var $curBunker = $(this);  // define a local handle for this rocket
+    $('.projectile').each( function() {
+      var $curProjectile = $(this);  // define a local handle for this asteroid
+
+      // For each projectile and bunker, check for collisions
+      if (isColliding($curBunker, $curProjectile, 10)) {
+        console.log($curBunker.children('img').attr('src'));
+        // If a projectile and bunker collide, take a layer off the bunker
+        switch ($curBunker.children('img').attr('src')) {
+          case 'img/gift.png': {
+            $curBunker.children('img').attr('src', 'img/gift1.png');
+            $curProjectile.remove();
+            let bunkerHeight = parseInt($curBunker.css('height'));
+            $curBunker.css('height', (bunkerHeight * (4/5)) + "px");
+            break;
+          }
+          case 'img/gift1.png': {
+            $curBunker.children('img').attr('src', 'img/gift2.png');
+            $curProjectile.remove();
+            let bunkerHeight = parseInt($curBunker.css('height'));
+            $curBunker.css('height', (bunkerHeight * (3/4)) + "px");
+            break;
+          }
+          case 'img/gift2.png': {
+            $curBunker.children('img').attr('src', 'img/gift3.png');
+            $curProjectile.remove();
+            let bunkerHeight = parseInt($curBunker.css('height'));
+            $curBunker.css('height', (bunkerHeight * (2/3)) + "px");
+            break;
+          }
+          case 'img/gift3.png': {
+            $curBunker.children('img').attr('src', 'img/gift4.png');
+            $curProjectile.remove();
+            let bunkerHeight = parseInt($curBunker.css('height'));
+            $curBunker.css('height', (bunkerHeight * (1/2)) + "px");
+            break;
+          }
+          case 'img/gift4.png': {
+            $curBunker.remove();
+            $curProjectile.remove();
+          }
+        }
       }
     });
   });
@@ -175,18 +267,15 @@ function checkCollisions() {
   $('.enemy').each( function() {
     var $curEnemy = $(this);
     if (isColliding($curEnemy, snowman, 0)) {
+      GAME_OVER = true;
+    }
+  });
 
-      // Remove all game elements
-      snowman.remove();
-      $('.snowball').remove();  // remove all snowballs
-      $('.Enemy').remove();  // remove all enemies
-
-      // Hide primary windows
-      gwhGame.hide();
-      gwhStatus.hide();
-
-      // Show "Game Over" screen
-      gwhOver.show();
+  // Next, check for projectile-snowman interactions
+  $('.projectile').each( function() {
+    var $curProjectile = $(this);
+    if (isColliding($curProjectile, snowman, 0)) {
+      GAME_OVER = true;
     }
   });
 }
@@ -247,6 +336,29 @@ function createEnemies(enemySize) {
 	}
 }
 
+function createBunkers() {
+  console.log('Creating bunkers...');
+  var bunkerX = 0;
+  var bunkerY = 0;
+  var bunkerSize = Math.floor(900 / (NUM_BUNKERS * 2));
+
+  var i;
+  for (i = 0; i < NUM_BUNKERS; i++) {
+    var bunkerDivStr = "<div id='b-" + bunkerIdx + "' class='bunker'></div>"
+		gwhGame.append(bunkerDivStr);
+		var $curBunker = $('#b-'+bunkerIdx);
+		$curBunker.css('position',"absolute");
+		$curBunker.css('left', ((bunkerSize/2) + (i * bunkerSize * 2)) + "px");
+		$curBunker.css('top', ((parseInt(gwhGame.height()) - 225) + "px"));
+		$curBunker.css('width', bunkerSize + "px");
+		$curBunker.css('height', bunkerSize + "px");
+		$curBunker.append("<img src='img/gift.png' height ='" + bunkerSize + " width =" + bunkerSize + "'/>");
+		$curBunker.children('img').attr('position', 'absolute');
+		bunkerIdx++;
+  }
+
+}
+
 //Handles enemy movement
 function moveEnemies(enemySize) {
 	if (ENEMY_DIRECTION === "left") {
@@ -256,7 +368,10 @@ function moveEnemies(enemySize) {
 				ENEMY_DIRECTION = "right";
 				$('.enemy').each( function() {
 					var $curEnemy = $(this);
-					$curEnemy.css('top', parseInt($curEnemy.css('top')) + (enemySize / 16))
+          $curEnemy.css('top', parseInt($curEnemy.css('top')) + (enemySize / 10))
+          if (parseInt($curEnemy.css('top')) > 450) {
+            GAME_OVER = true;
+          }
 				});
 				return false;
 			}
@@ -275,7 +390,7 @@ function moveEnemies(enemySize) {
 				ENEMY_DIRECTION = "left";
 				$('.enemy').each( function() {
 					var $curEnemy = $(this);
-					$curEnemy.css('top', parseInt($curEnemy.css('top')) + (enemySize / 16))
+					$curEnemy.css('top', parseInt($curEnemy.css('top')) + (enemySize / 10))
 				});
 				return false;
 			}
@@ -287,9 +402,10 @@ function moveEnemies(enemySize) {
 			});
 		}
 	}
-	if (NUM_ENEMIES < 4) {
+	if (NUM_ENEMIES < threshold) {
 		ENEMY_SPEED = ENEMY_SPEED*2;
 		console.log(ENEMY_SPEED);
+		threshold = Math.ceil(threshold*ENEMY_DOUBLE_RATIO);
 	}
 }
 
@@ -312,11 +428,15 @@ function createProjectile() {
   $curProjectile.css('width', astrSize+"px");
   $curProjectile.css('height', astrSize+"px");
 
-  if(Math.random() > 0.5){
+  if(Math.random() < 1/4){
     $curProjectile.append("<img src='img/blueBook.png' height='" + astrSize + "'/>")
-  } else {
+  } else if(Math.random() < 1/2) {
     $curProjectile.append("<img src='img/icicle.png' height='" + astrSize + "'/>")
-  }
+  } else if(Math.random() < 3/4) {
+    $curProjectile.append("<img src='img/corona.png' height='" + astrSize + "'/>")
+  } else {
+    $curProjectile.append("<img src='img/glasses.png' height='" + astrSize + "'/>")
+  } 
 
   var index = 0
   let startingPositionLeft;
@@ -325,9 +445,7 @@ function createProjectile() {
     var $curEnemy = $(this);
     if(index === projectileEnemyID){
       startingPositionLeft = parseInt($curEnemy.css('left')) + parseInt($curEnemy.css('width'))/2.5
-      console.log(startingPositionLeft)
       startingPositionBottom = parseInt($curEnemy.css('top')) + parseInt($curEnemy.css('height'))
-      console.log(startingPositionBottom)
     }
     index++
   });
@@ -397,22 +515,35 @@ function moveSnowman(arrow) {
   }
 }
 
-/* Things currently being worked on
+/* Things added
+    game size parameters are hardcoded now
+    speed threshold function re-added
+    enemy movement speed, pojectile launch, and snowball generation sped up, make the game more realistic
     points for hitting projectile
     hit box for projectile and player
+    detecting enemy-player collisions better
+    game over when enemies get too low
+    end level when enemies are eliminated
+    stop intervals when level is over
+      currently goes to game over screen, but when levels are added that will be easy to fix
+*/
+
+/* Things currently being worked on
+    [x] points for hitting projectile
+    [x] hit box for projectile and player
     destructible bunkers (each is an image broken into multiple vertical cuts that independently detect collisions with snowballs and enemy collisons)
       may need to make snowball slightly smaller
 */
 
 
 /* Things we need/want
-		make everything (including movement speed) scale to the screen size.
+		[x] make everything (including movement speed) scale to the screen size.
 		[x] detecting enemy-player collisions better
 			only need to cheeck that they are below a y-value threshold and overlapping horizontally with player
 		destructible bunkers (each is an image broken into multiple vertical cuts that independently detect collisions with snowballs and enemy collisons)
       may need to make snowball slightly smaller
-    if number is equal to zero, end the level
-    if enemy 'top' gets to where the player is, game over
+    [x] if number is equal to zero, end the level
+    [x] if enemy 'top' gets to where the player is, game over
 		[x] multiple enemies
 		[x] randomly choosing enemy to shoot projectile
 			should only bottom enemies be able to shoot like in the game?
