@@ -17,9 +17,9 @@ var ENEMY_DOUBLE_RATIO = 0.5;
 var ENEMY_SPEED = 2;
 var ENEMY_DIRECTION = "right";
 var OBJECT_REFRESH_RATE = 50;    // ms
-var SCORE_UNIT_PROJECTILE          = 5;   // scoring is in 100-point units
-var SCORE_UNIT_HIT          = 50;   // scoring is in 100-point units
-var SCORE_UNIT_KILL          = 100;   // scoring is in 100-point units
+var SCORE_UNIT_PROJECTILE   = 5;   
+var SCORE_UNIT_HIT          = 50;
+var SCORE_UNIT_KILL          = 100;
 var PROJECTILE_SPAWN_RATE = 1200;  // ms
 var SNOWBALL_RECHARGE = 400;
 var SNOWBALL_TIMER = 0;
@@ -307,18 +307,10 @@ function isColliding(o1, o2, offset) {
   return false;
 }
 
-// Return a string corresponding to a random HEX color code
-function getRandomColor() {
-  // Return a random color. Note that we don't check to make sure the color does not match the background
-  return '#' + (Math.random()*0xFFFFFF<<0).toString(16);
-}
-
 // Handles enemy creation
 function createEnemies(ENEMY_SIZE) {
 	console.log('Spawning enemies...');
 	var enemyOffset = 1.1*ENEMY_SIZE;
-	var enemyX = 0;
-	var enemyY = 0;
 	var i;
 	for (i = 0; i < ENEMY_PATTERN[CUR_LEVEL][0]; i++) {
 		var j;
@@ -340,10 +332,7 @@ function createEnemies(ENEMY_SIZE) {
 
 function createBunkers() {
   console.log('Creating bunkers...');
-  var bunkerX = 0;
-  var bunkerY = 0;
   var bunkerSize = Math.floor(900 / (NUM_BUNKERS[CUR_LEVEL] * 2));
-
   var i;
   for (i = 0; i < NUM_BUNKERS[CUR_LEVEL]; i++) {
     var bunkerDivStr = "<div id='b-" + bunkerIdx + "' class='bunker'></div>"
@@ -421,7 +410,7 @@ function createProjectile() {
   console.log('Spawning projectile...');
 
   if (!GAME_PAUSED){
-    // NOTE: source - http://www.clipartlord.com/wp-content/uploads/2016/04/aestroid.png
+
     var projectileDivStr = "<div id='a-" + projectileIdx + "' class='projectile'></div>"
     // Add the snowball to the screen
     gwhGame.append(projectileDivStr);
@@ -458,10 +447,6 @@ function createProjectile() {
       index++
     });
 
-    // Pick a random starting position within the game window
-    // Using 50px as the size of the projectile (since no instance exists yet)
-
-    // Set the instance-specific properties
     $curProjectile.css('left', startingPositionLeft+"px");
     $curProjectile.css('top', startingPositionBottom+"px");
 
@@ -482,7 +467,6 @@ function fireSnowball() {
   if(!GAME_PAUSED){
     console.log('Firing snowball...');
 
-    // NOTE: source - https://www.raspberrypi.org/learning/microbit-game-controller/images/missile.png
     var snowballDivStr = "<div id='r-" + snowballIdx + "' class='snowball'><img src='img/snowball.png'/></div>";
     // Add the snowball to the screen
     gwhGame.append(snowballDivStr);
@@ -491,9 +475,7 @@ function fireSnowball() {
     let curImg = $('#r-'+snowballIdx + ' img');
     snowballIdx++;  // update the index to maintain uniqueness next time
 
-    // Set vertical position
     curSnowball.css('top', SNOWMAN_OBJ.snowmanStyle.top);
-    // Set horizontal position
     var rxPos = SNOWMAN_OBJ.snowmanStyle.left + snowman.width()/4;  // In order to center the snowball, shift by half the div size (recall: origin [0,0] is top-left of div)
     curSnowball.css('left', rxPos+"px");
     curSnowball.css('height', "20px");
@@ -534,6 +516,7 @@ function moveSnowman(arrow) {
 function newLevel(){
   $('.snowball').remove();
   $('.projectile').remove();
+  $('.bunker').remove();
   LEVEL_OBJ.level += 1
   $('#levelScreen').toggle();
   gwhGame.toggle();
