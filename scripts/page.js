@@ -24,11 +24,11 @@ var PROJECTILE_SPAWN_RATE = 1200;  // ms
 var SNOWBALL_RECHARGE = 400;
 var SNOWBALL_TIMER = 0;
 var GAME_OVER = false;
-var NUM_BUNKERS = 4;
-var CUR_LEVEL = 1;
+var NUM_BUNKERS = [4,4,3,3,2,1];
+var CUR_LEVEL = 0;
 var LEVEL_SPEED = 2;
 var GAME_PAUSED = false;
-var ENEMY_SIZE = 100;
+
 
 // Size vars
 var maxSnowmanPosX, maxSnowmanPosY, maxEnemyPosX;
@@ -49,9 +49,10 @@ var KEYS = {
 }
 
 // Temporary Storage of Level Data
-var ENEMY_PATTERN = [7,1,8] // scale
-var threshold = Math.ceil(ENEMY_DOUBLE_RATIO * ENEMY_PATTERN[2] * ENEMY_PATTERN[1]);
-var NUM_ENEMIES = ENEMY_PATTERN[1] * ENEMY_PATTERN[0]
+var ENEMY_PATTERN = [[7,1],[10,1],[15,1],[7,2],[10,2],[15,2]] // scale
+var threshold = Math.ceil(ENEMY_DOUBLE_RATIO * ENEMY_PATTERN[CUR_LEVEL][0] * ENEMY_PATTERN[CUR_LEVEL][1]);
+var NUM_ENEMIES = ENEMY_PATTERN[CUR_LEVEL][1] * ENEMY_PATTERN[CUR_LEVEL][0]
+var ENEMY_SIZE = 100 * 8 / (ENEMY_PATTERN[CUR_LEVEL][0] + 1);
 
 ////  Functional Code  ////
 
@@ -96,12 +97,12 @@ $(document).ready( function() {
     },100);
     // Create enemies 
 
-    maxEnemyPosX = gwhGame.width() - ENEMY_SIZE - 5;
-    createEnemies();
+    maxEnemyPosX = gwhGame.width() - ENEMY_SIZE + 10;
+    createEnemies(ENEMY_SIZE);
     createBunkers();
     // Move enemies
     let mv_en_id = setInterval ( function() {
-      moveEnemies();
+      moveEnemies(ENEMY_SIZE);
       if (NUM_ENEMIES === 0) {
         newLevel()
       }
@@ -313,15 +314,15 @@ function getRandomColor() {
 }
 
 // Handles enemy creation
-function createEnemies() {
+function createEnemies(ENEMY_SIZE) {
 	console.log('Spawning enemies...');
 	var enemyOffset = 1.1*ENEMY_SIZE;
 	var enemyX = 0;
 	var enemyY = 0;
 	var i;
-	for (i = 0; i < ENEMY_PATTERN[0]; i++) {
+	for (i = 0; i < ENEMY_PATTERN[CUR_LEVEL][0]; i++) {
 		var j;
-		for (j = 0; j < ENEMY_PATTERN[1]; j++) {
+		for (j = 0; j < ENEMY_PATTERN[CUR_LEVEL][1]; j++) {
 			var enemyDivStr = "<div id='e-" + enemyIdx + "' class='enemy'></div>"
 			gwhGame.append(enemyDivStr);
 			var $curEnemy = $('#e-'+enemyIdx);
@@ -341,10 +342,10 @@ function createBunkers() {
   console.log('Creating bunkers...');
   var bunkerX = 0;
   var bunkerY = 0;
-  var bunkerSize = Math.floor(900 / (NUM_BUNKERS * 2));
+  var bunkerSize = Math.floor(900 / (NUM_BUNKERS[CUR_LEVEL] * 2));
 
   var i;
-  for (i = 0; i < NUM_BUNKERS; i++) {
+  for (i = 0; i < NUM_BUNKERS[CUR_LEVEL]; i++) {
     var bunkerDivStr = "<div id='b-" + bunkerIdx + "' class='bunker'></div>"
 		gwhGame.append(bunkerDivStr);
 		var $curBunker = $('#b-'+bunkerIdx);
@@ -361,7 +362,7 @@ function createBunkers() {
 }
 
 //Handles enemy movement
-function moveEnemies() {
+function moveEnemies(ENEM) {
   if(!GAME_PAUSED){
     if (ENEMY_DIRECTION === "left") {
       $('.enemy').each( function() {
@@ -530,7 +531,7 @@ function moveSnowman(arrow) {
   }
 }
 
-function newLevel(ENEMY_SIZE){
+function newLevel(){
   $('.snowball').remove();
   $('.projectile').remove();
   LEVEL_OBJ.level += 1
@@ -541,11 +542,13 @@ function newLevel(ENEMY_SIZE){
   ENEMY_SPEED = LEVEL_SPEED;
   PROJECTILE_SPAWN_RATE -= 50;
   GAME_PAUSED = true
-  threshold = Math.ceil(ENEMY_DOUBLE_RATIO * ENEMY_PATTERN[2] * ENEMY_PATTERN[1]);
-  NUM_ENEMIES = ENEMY_PATTERN[1] * ENEMY_PATTERN[0]
-  createEnemies();
+  threshold = Math.ceil(ENEMY_DOUBLE_RATIO * ENEMY_PATTERN[CUR_LEVEL][0] * ENEMY_PATTERN[CUR_LEVEL][1]);
+	NUM_ENEMIES = ENEMY_PATTERN[CUR_LEVEL][1] * ENEMY_PATTERN[CUR_LEVEL][0]
+	maxEnemyPosX += ENEMY_SIZE;
+	ENEMY_SIZE = 100 * 8 / (ENEMY_PATTERN[CUR_LEVEL][0] + 1);
+	maxEnemyPosX -= ENEMY_SIZE;
+  createEnemies(ENEMY_SIZE);
   createBunkers();
-  
   setTimeout(function() {
     $('#levelScreen').hide();
     gwhGame.show();       
