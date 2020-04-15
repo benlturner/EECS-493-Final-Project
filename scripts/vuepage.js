@@ -6,6 +6,13 @@ function createVueObjects() {
         }
     });
 
+    LEVEL_OBJ = new Vue({
+        el: '#level',
+        data: {
+            level: 1
+        }
+    })
+
     SNOWMAN_OBJ = new Vue({
         el: '#enterprise',
         data: {

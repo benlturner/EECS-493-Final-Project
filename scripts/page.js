@@ -79,7 +79,9 @@ $(document).ready( function() {
   gwhGame.hide();
   gwhStatus.hide();
   setTimeout(function () {
-    $('#splashscreen').hide();
+    $('#titleScreen').hide();
+    $('#levelScreen').hide();
+    $('#splashScreen').hide();
     gwhGame.show();
     gwhStatus.show();
 
@@ -113,7 +115,7 @@ $(document).ready( function() {
 
         // Hide primary windows
         gwhGame.hide();
-        gwhStatus.hide();
+        // gwhStatus.hide();
   
         // Show "Game Over" screen
         gwhOver.show();
@@ -128,7 +130,7 @@ $(document).ready( function() {
     let cr_prj_id = setInterval(function() {
       createProjectile();
     }, PROJECTILE_SPAWN_RATE)
-  },5)
+  }, 5000)
 
 });
 
@@ -531,7 +533,8 @@ function moveSnowman(arrow) {
 function newLevel(ENEMY_SIZE){
   $('.snowball').remove();
   $('.projectile').remove();
-  $('#splashscreen').toggle();
+  LEVEL_OBJ.level += 1
+  $('#levelScreen').toggle();
   gwhGame.toggle();
   CUR_LEVEL++;
   LEVEL_SPEED++;
@@ -544,7 +547,7 @@ function newLevel(ENEMY_SIZE){
   createBunkers();
   
   setTimeout(function() {
-    $('#splashscreen').hide();
+    $('#levelScreen').hide();
     gwhGame.show();       
     GAME_PAUSED = false;
   }, 5000)

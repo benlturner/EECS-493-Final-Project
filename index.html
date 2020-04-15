@@ -1,6 +1,6 @@
 <html>
 
-<title>Vue Blaster</title>
+<title>Maize Invaders</title>
 
 <!-- JS -->
 <script src='scripts/jquery.min.js'></script>
@@ -16,8 +16,14 @@
 <!-- HTML -->
 <body>
   <div class='outer-container'>
-	  <div id="splashscreen" style="left: 400; position:relative; top: 300;">
-          <h1><i>Rules:</i></h1>
+    <div id="titleScreen" style="left: 330; position:relative; top: 50;">
+      <h1><i>Maize Invaders</i></h1>
+    </div>
+    <div id="levelScreen" style="left: 380; position:relative; top: 200;">
+      <h1 id='level'><i>Level {{level}}</i></h1>
+    </div>
+	  <div id="splashScreen" style="left: 200; position:relative; top: 300;">
+          <h1><i>Controls:</i></h1>
 		  <ul>
           <li> use arrow keys to move the player </li>
 		  <li> press [spacebar] to shoot snowballs at enemies</li>
