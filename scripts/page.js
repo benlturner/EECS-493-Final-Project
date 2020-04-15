@@ -24,7 +24,7 @@ var PROJECTILE_SPAWN_RATE = 1200;  // ms
 var SNOWBALL_RECHARGE = 400;
 var SNOWBALL_TIMER = 0;
 var GAME_OVER = false;
-var NUM_BUNKERS = [4,4,3,3,2,1];
+var NUM_BUNKERS = [4,4,3,3,2,2];
 var CUR_LEVEL = 0;
 var LEVEL_SPEED = 2;
 var GAME_PAUSED = false;
@@ -332,18 +332,18 @@ function createEnemies(ENEMY_SIZE) {
 
 function createBunkers() {
   console.log('Creating bunkers...');
-  var bunkerSize = Math.floor(900 / (NUM_BUNKERS[CUR_LEVEL] * 2));
+  var bunkerSize = Math.floor((900 - (NUM_BUNKERS[CUR_LEVEL] * 112)) / ((NUM_BUNKERS[CUR_LEVEL] + 1)));
   var i;
   for (i = 0; i < NUM_BUNKERS[CUR_LEVEL]; i++) {
     var bunkerDivStr = "<div id='b-" + bunkerIdx + "' class='bunker'></div>"
 		gwhGame.append(bunkerDivStr);
 		var $curBunker = $('#b-'+bunkerIdx);
 		$curBunker.css('position',"absolute");
-		$curBunker.css('left', ((bunkerSize/2) + (i * bunkerSize * 2)) + "px");
-		$curBunker.css('top', ((parseInt(gwhGame.height()) - 225) + "px"));
-		$curBunker.css('width', bunkerSize + "px");
-		$curBunker.css('height', bunkerSize + "px");
-		$curBunker.append("<img src='img/gift.png' height ='" + bunkerSize + " width =" + bunkerSize + "'/>");
+		$curBunker.css('left', ((bunkerSize) + (i * (112 + bunkerSize))) + "px");
+		$curBunker.css('top', ((parseInt(gwhGame.height()) - 200) + "px"));
+		$curBunker.css('width', "112 px");
+		$curBunker.css('height', "112 px");
+		$curBunker.append("<img src='img/gift.png' height = 112 px width = 112px'/>");
 		$curBunker.children('img').attr('position', 'absolute');
 		bunkerIdx++;
   }
