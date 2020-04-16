@@ -79,15 +79,15 @@ $(document).ready( function() {
   SNOWMAN_OBJ.snowmanStyle.top = maxSnowmanPosY
   $(window).keydown(keydownRouter);
 // show titlescreen first
-// show objectives
   setTimeout (function () {
+  // show objectives
   gwhObjectives.show();
-// show controls
 	setTimeout (function () {
-		gwhObjectives.hide();
-		gwhControls.show();
-// show level screen
+	// show controls
+	gwhObjectives.hide();
+	gwhControls.show();
 	setTimeout(function () {
+	// show level screen
 		$('#levelScreen').show();
 		$('#titleScreen').hide();
 		gwhControls.hide();
@@ -555,42 +555,19 @@ function newLevel(){
   }, 5000)
 }
 
-/* Things added
-    game size parameters are hardcoded now
-    speed threshold function re-added
-    enemy movement speed, pojectile launch, and snowball generation sped up, make the game more realistic
-    points for hitting projectile
-    hit box for projectile and player
-    detecting enemy-player collisions better
-    game over when enemies get too low
-    end level when enemies are eliminated
-    stop intervals when level is over
-      currently goes to game over screen, but when levels are added that will be easy to fix
-    destructible bunkers (each is an image broken into multiple vertical cuts that independently detect collisions with snowballs and enemy collisons)
-      may need to make snowball slightly smaller
-    multiple levels
-    theme the game to UofM more? Maybe make the background more UofM, the snowman have UofM colors on its scarf etc.
-*/
 
 /* Things we need/want
-		[x] make everything (including movement speed) scale to the screen size.
-		[x] detecting enemy-player collisions better
-			only need to cheeck that they are below a y-value threshold and overlapping horizontally with player
-		[x] destructible bunkers (each is an image broken into multiple vertical cuts that independently detect collisions with snowballs and enemy collisons)
-      may need to make snowball slightly smaller
-    [x] if number is equal to zero, end the level
-    [x] if enemy 'top' gets to where the player is, game over
-		[x] multiple enemies
-		[x] randomly choosing enemy to shoot projectile
-			should only bottom enemies be able to shoot like in the game?
-				if we wanted this, we would keep track of each column of enemies' lowest member and on death, would update.
-		random enemies like the UFO in space invaders?
-		a shop
-			lives and upgrades to firing speed or new weapons? Cosmetics?
-		the ability to move and shoot (store last two inputs and on update, execute: < + S = left and shoot, < [null] = left, < > = nothing, etc.)
-		[x] multiple levels
-		a better rule overlay
-		a transition screen between levels
-		[x] theme the game to UofM more? Maybe make the background more UofM, the snowman have UofM colors on its scarf etc.
-		comment everything, remove useless code, replace magic numbers with variables
+		N - level-specific enemy firing frequency and enemy speed
+		N - after the total amount of pre-built levels, congratulate the player
+		W - after completion, switch back to procedurally generating levels with random level-specific 
+			properties.
+		W - random enemies like the UFO in space invaders?
+		N - a shop
+			lives, cosmetics, double/triple shot, shots pierce through 1-2 enemies, shots go through bunkers, larger snowballs.
+				maybe permanently unlock upgrades, but players can only have 2/3 equiped at a time?
+		W - the ability to move and shoot (store last two inputs and on update, execute: < + S = left and shoot, < [null] = left, < > = nothing, etc.)
+		W - a restart button as opposed to refreshing
+		W - theme the game to UofM more? Maybe make the background more UofM, the snowman have UofM colors on its scarf etc.
+		N - comment everything, remove useless code, replace magic numbers with variables
+
 */
