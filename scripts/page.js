@@ -179,9 +179,13 @@ function checkCollisions() {
       var $curSnowball = $(this);  // define a local handle for this snowball
       $('.enemy').each( function() {
         var $curEnemy = $(this);  // define a local handle for this enemy
-
+        
+        off = 12
+        if ($curEnemy.children('img').attr('src') == 'img/snowman1ball.png'){
+          off = 25
+        }
         // For each snowball and enemy, check for collisions
-        if (isColliding($curSnowball, $curEnemy, 12)) {
+        if (isColliding($curSnowball, $curEnemy, off)) {
           // If a snowball and enemy collide, remove a ball from the enemy
           switch ($curEnemy.children('img').attr('src')) {
             case 'img/snowman.png': {
@@ -425,12 +429,10 @@ function createProjectile() {
     $curProjectile.css('width', astrSize+"px");
     $curProjectile.css('height', astrSize+"px");
 
-    if(Math.random() < 1/4){
+    if(Math.random() < 1/3){
       $curProjectile.append("<img src='img/blueBook.png' height='" + astrSize + "'/>")
-    } else if(Math.random() < 1/2) {
+    } else if(Math.random() < 2/3) {
       $curProjectile.append("<img src='img/icicle.png' height='" + astrSize + "'/>")
-    } else if(Math.random() < 3/4) {
-      $curProjectile.append("<img src='img/corona.png' height='" + astrSize + "'/>")
     } else {
       $curProjectile.append("<img src='img/glasses.png' height='" + astrSize + "'/>")
     } 
