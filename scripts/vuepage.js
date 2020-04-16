@@ -11,13 +11,13 @@ function createVueObjects() {
         data: {
             level: 1
         }
-    })
+    });
 
     SNOWMAN_OBJ = new Vue({
         el: '#enterprise',
         data: {
             snowmanStyle: {
-                top: null, 
+                top: null,
                 left: 122,
                 ary: new Array(1,2,3)
             },

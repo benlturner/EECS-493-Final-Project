@@ -17,7 +17,7 @@ var ENEMY_DOUBLE_RATIO = 0.5;
 var ENEMY_SPEED = 2;
 var ENEMY_DIRECTION = "right";
 var OBJECT_REFRESH_RATE = 50;    // ms
-var SCORE_UNIT_PROJECTILE   = 5;   
+var SCORE_UNIT_PROJECTILE   = 5;
 var SCORE_UNIT_HIT          = 50;
 var SCORE_UNIT_KILL          = 100;
 var PROJECTILE_SPAWN_RATE = [1200,1100,1150,1050,1000,1100];  // ms
@@ -74,8 +74,8 @@ $(document).ready( function() {
   // Set global positions
   maxSnowmanPosX = gwhGame.width() - snowman.width();
   maxSnowmanPosY = gwhGame.height() - 75;
-  
-  SNOWMAN_OBJ.snowmanStyle.top = maxSnowmanPosY
+
+  SNOWMAN_OBJ.snowmanStyle.top = maxSnowmanPosY;
   gwhGame.hide();
   $(window).keydown(keydownRouter);
 // show titlescreen first
@@ -94,57 +94,10 @@ $(document).ready( function() {
   setTimeout(function () {
 	  gwhControls.hide();
     $('#levelScreen').hide();
-    //$('#splashScreen').hide();
     gwhGame.show();
     gwhStatus.show();
 
-    // Periodically check for collisions (instead of checking every position-update)
-    let ch_co_id = setInterval( function() {
-      checkCollisions();  // Remove elements if there are collisions
-    }, 100);
-
-    // Update Snowball reload
-    let rl_sb_id = setInterval (function() {
-      SNOWBALL_TIMER = SNOWBALL_TIMER + 100;
-    },100);
-    // Create enemies 
-    maxEnemyPosX = gwhGame.width() - ENEMY_SIZE + 10;
-    createEnemies(ENEMY_SIZE);
-    createBunkers();
-    // Move enemies
-    let mv_en_id = setInterval ( function() {
-      moveEnemies();
-      if (NUM_ENEMIES === 0) {
-        clearInterval(cr_prj_id);
-		newLevel()
-		cr_prj_id = setInterval(function() {
-      createProjectile();
-    }, PROJECTILE_SPAWN_RATE[CUR_LEVEL]);
-      }
-
-      if (GAME_OVER) {
-        // Remove all game elements
-        snowman.remove();
-        $('.snowball').remove();
-        $('.projectile').remove();
-        $('.enemy').remove();
-
-        // Hide primary windows
-        gwhGame.hide();
-        // gwhStatus.hide();
-  
-        // Show "Game Over" screen
-        gwhOver.show();
-  
-        clearInterval(ch_co_id);
-        clearInterval(rl_sb_id);
-        clearInterval(mv_en_id);
-      }
-    }, 100);
-
-    let cr_prj_id = setInterval(function() {
-      createProjectile();
-    }, PROJECTILE_SPAWN_RATE[CUR_LEVEL])
+    setupIntervals();
   }, 5000);
   }, 10000);
 	}, 10000);
@@ -155,21 +108,112 @@ $(document).ready( function() {
 function keydownRouter(e) {
   switch (e.which) {
     case KEYS.spacebar: {
-		if (SNOWBALL_TIMER > SNOWBALL_RECHARGE) {
-			fireSnowball();
-		}
-      break; 
-	}
+  		if (SNOWBALL_TIMER > SNOWBALL_RECHARGE) {
+  			fireSnowball();
+  		}
+      console.log("spacebar pressed");
+      if (GAME_OVER) {
+        restartGame();
+      }
+      break;
+	  }
     case KEYS.left:
     case KEYS.right:
       moveSnowman(e.which);
       break;
-	case KEYS.enter:
-		proceed();
+	  case KEYS.enter:
+
+      break;
     default:
       console.log("Invalid input!");
   }
   e.Handled = true;
+}
+
+// set up all the intervals and the game
+function setupIntervals() {
+  // Periodically check for collisions (instead of checking every position-update)
+  let ch_co_id = setInterval( function() {
+    checkCollisions();  // Remove elements if there are collisions
+  }, 100);
+
+  // Update Snowball reload
+  let rl_sb_id = setInterval (function() {
+    SNOWBALL_TIMER = SNOWBALL_TIMER + 100;
+  },100);
+  // Create enemies
+  maxEnemyPosX = gwhGame.width() - ENEMY_SIZE + 10;
+  createEnemies(ENEMY_SIZE);
+  createBunkers();
+  // Move enemies
+  let mv_en_id = setInterval ( function() {
+    moveEnemies();
+    if (NUM_ENEMIES === 0) {
+      clearInterval(cr_prj_id);
+      newLevel();
+      cr_prj_id = setInterval(function() {
+        createProjectile();
+      }, PROJECTILE_SPAWN_RATE[CUR_LEVEL]);
+    }
+
+    if (GAME_OVER) {
+      GAME_PAUSED = true;
+      // Remove all game elements
+      snowman.remove();
+      $('.snowball').remove();
+      $('.projectile').remove();
+      $('.enemy').remove();
+
+      // Hide primary windows
+      gwhGame.hide();
+      // gwhStatus.hide();
+
+      // Show "Game Over" screen
+      gwhOver.show();
+
+      clearInterval(ch_co_id);
+      clearInterval(rl_sb_id);
+      clearInterval(mv_en_id);
+      clearInterval(cr_prj_id);
+    }
+  }, 100);
+
+  let cr_prj_id = setInterval(function() {
+    createProjectile();
+  }, PROJECTILE_SPAWN_RATE[CUR_LEVEL]);
+}
+
+// Restarts the game when user presses the spacebar
+function restartGame() {
+  GAME_OVER = false;
+  GAME_PAUSED = false;
+  console.log("restarting...");
+
+
+  /*createVueObjects();
+  // Set global handles (now that the page is loaded)
+  gwhGame   = $('.game-window');
+  gwhOver   = $('.game-over');
+  gwhStatus = $('.status-window');
+  gwhObjectives = $('.objectives');
+  gwhControls = $('.controls');
+  snowman   = $('#enterprise');  // set the global snowman handle
+  // Set global positions
+  maxSnowmanPosX = gwhGame.width() - snowman.width();
+  maxSnowmanPosY = gwhGame.height() - 75;
+  SNOWMAN_OBJ.snowmanStyle.top = maxSnowmanPosY;*/
+
+  gwhOver.hide();
+  $('#levelScreen').show();
+
+  // start actual game
+  setTimeout(function() {
+    $('#levelScreen').hide();
+    gwhGame.show();
+    gwhStatus.show();
+
+    setupIntervals();
+  }, 5000);
 }
 
 // Check for any collisions and update/remove the appropriate object if needed
@@ -197,7 +241,7 @@ function checkCollisions() {
       var $curSnowball = $(this);  // define a local handle for this snowball
       $('.enemy').each( function() {
         var $curEnemy = $(this);  // define a local handle for this enemy
-        
+
         off = 12
         if ($curEnemy.children('img').attr('src') == 'img/snowman1ball.png'){
           off = 25
@@ -301,7 +345,7 @@ function checkCollisions() {
     });
 
   }
-  
+
 }
 
 // Check if two objects are colliding
@@ -424,7 +468,7 @@ function moveEnemies() {
       console.log(ENEMY_SPEED);
       threshold = Math.ceil(threshold*ENEMY_DOUBLE_RATIO);
     }
-  }	
+  }
 }
 
 // Handle projectile creation events
@@ -442,7 +486,7 @@ function createProjectile() {
     projectileIdx++;  // update the index to maintain uniqueness next time
 
     // Set size of the projectile (semi-randomized)
-    var projectileEnemyID = Math.floor(Math.random() * NUM_ENEMIES);   
+    var projectileEnemyID = Math.floor(Math.random() * NUM_ENEMIES);
     var astrSize = (MAX_PROJECTILE_SIZE + MIN_PROJECTILE_SIZE)/2;
     $curProjectile.css('width', astrSize+"px");
     $curProjectile.css('height', astrSize+"px");
@@ -453,7 +497,7 @@ function createProjectile() {
       $curProjectile.append("<img src='img/icicle.png' height='" + astrSize + "'/>")
     } else {
       $curProjectile.append("<img src='img/glasses.png' height='" + astrSize + "'/>")
-    } 
+    }
 
     var index = 0
     let startingPositionLeft;
@@ -479,7 +523,7 @@ function createProjectile() {
       }
     }, OBJECT_REFRESH_RATE);
   }
-  
+
 }
 
 // Handle "fire" [snowball] events
@@ -516,7 +560,7 @@ function fireSnowball() {
     SNOWBALL_TIMER = 0;
 
   }
-  
+
 }
 
 // Handle snowman movement events
@@ -552,7 +596,7 @@ function newLevel(){
   createBunkers();
   setTimeout(function() {
     $('#levelScreen').hide();
-    gwhGame.show();       
+    gwhGame.show();
     GAME_PAUSED = false;
   }, 5000)
 }
@@ -561,7 +605,7 @@ function newLevel(){
 /* Things we need/want
 		N - design levels
 		N - after the total amount of pre-built levels, congratulate the player
-		W - after completion, switch back to procedurally generating levels with random level-specific 
+		W - after completion, switch back to procedurally generating levels with random level-specific
 			properties.
 		W - random enemies like the UFO in space invaders?
 		N - a shop
