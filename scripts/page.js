@@ -100,7 +100,7 @@ $(document).ready( function() {
     setupIntervals();
   }, 5000);
   }, 10000);
-	}, 10000);
+  }, 10000);
   }, 5000);
 });
 
@@ -159,22 +159,15 @@ function setupIntervals() {
     if (GAME_OVER) {
       GAME_PAUSED = true;
       // Remove all game elements
-      snowman.remove();
       $('.snowball').remove();
       $('.projectile').remove();
       $('.enemy').remove();
 
       // Hide primary windows
       gwhGame.hide();
-      // gwhStatus.hide();
 
       // Show "Game Over" screen
       gwhOver.show();
-
-      clearInterval(ch_co_id);
-      clearInterval(rl_sb_id);
-      clearInterval(mv_en_id);
-      clearInterval(cr_prj_id);
     }
   }, 100);
 
@@ -186,33 +179,29 @@ function setupIntervals() {
 // Restarts the game when user presses the spacebar
 function restartGame() {
   GAME_OVER = false;
-  GAME_PAUSED = false;
+  GAME_PAUSED = true;
+  CUR_LEVEL = 1;
+  LEVEL_OBJ = 1;
   console.log("restarting...");
 
-
-  /*createVueObjects();
-  // Set global handles (now that the page is loaded)
-  gwhGame   = $('.game-window');
-  gwhOver   = $('.game-over');
-  gwhStatus = $('.status-window');
-  gwhObjectives = $('.objectives');
-  gwhControls = $('.controls');
-  snowman   = $('#enterprise');  // set the global snowman handle
-  // Set global positions
-  maxSnowmanPosX = gwhGame.width() - snowman.width();
-  maxSnowmanPosY = gwhGame.height() - 75;
-  SNOWMAN_OBJ.snowmanStyle.top = maxSnowmanPosY;*/
-
   gwhOver.hide();
+  $('.snowball').remove();
+  $('.projectile').remove();
+  $('.bunker').remove();
   $('#levelScreen').show();
 
-  // start actual game
   setTimeout(function() {
-    $('#levelScreen').hide();
     gwhGame.show();
-    gwhStatus.show();
-
-    setupIntervals();
+    $('#levelScreen').hide();
+    ENEMY_SPEED = LEVEL_SPEED[CUR_LEVEL];
+    threshold = Math.ceil(ENEMY_DOUBLE_RATIO * ENEMY_PATTERN[CUR_LEVEL][0] * ENEMY_PATTERN[CUR_LEVEL][1]);
+  	NUM_ENEMIES = ENEMY_PATTERN[CUR_LEVEL][1] * ENEMY_PATTERN[CUR_LEVEL][0];
+  	maxEnemyPosX += ENEMY_SIZE;
+  	ENEMY_SIZE = 100 * 8 / (ENEMY_PATTERN[CUR_LEVEL][0] + 1);
+  	maxEnemyPosX -= ENEMY_SIZE;
+    createEnemies(ENEMY_SIZE);
+    createBunkers();
+    GAME_PAUSED = false;
   }, 5000);
 }
 
