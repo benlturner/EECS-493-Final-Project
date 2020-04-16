@@ -20,14 +20,14 @@ var OBJECT_REFRESH_RATE = 50;    // ms
 var SCORE_UNIT_PROJECTILE   = 5;   
 var SCORE_UNIT_HIT          = 50;
 var SCORE_UNIT_KILL          = 100;
-var PROJECTILE_SPAWN_RATE = 1200;  // ms
+var PROJECTILE_SPAWN_RATE = [1200,1100,1150,1050,1000,1100];  // ms
 var SNOWBALL_RECHARGE = 400;
 var SNOWBALL_TIMER = 0;
 var GAME_OVER = false;
 var BUNKERSIZE = 100;
 var NUM_BUNKERS = [4,4,3,3,2,2];
 var CUR_LEVEL = 0;
-var LEVEL_SPEED = 2;
+var LEVEL_SPEED = [2,4,3,3,5,4];
 var GAME_PAUSED = false;
 
 
@@ -71,16 +71,11 @@ $(document).ready( function() {
   gwhObjectives = $('.objectives');
   gwhControls = $('.controls');
   snowman   = $('#enterprise');  // set the global snowman handle
-
-  // Set global positions
-  maxSnowmanPosX = gwhGame.width() - snowman.width() - 5;
-  maxSnowmanPosY = gwhGame.height() - 75;
-  
-  SNOWMAN_OBJ.snowmanStyle.top = maxSnowmanPosY
   $(window).keydown(keydownRouter);
 // show titlescreen first
   setTimeout (function () {
   // show objectives
+  $('#titleScreen').hide();
   gwhObjectives.show();
 	setTimeout (function () {
 	// show controls
@@ -89,7 +84,6 @@ $(document).ready( function() {
 	setTimeout(function () {
 	// show level screen
 		$('#levelScreen').show();
-		$('#titleScreen').hide();
 		gwhControls.hide();
   setTimeout(function () {
 	  gwhControls.hide();
@@ -107,16 +101,23 @@ $(document).ready( function() {
     let rl_sb_id = setInterval (function() {
       SNOWBALL_TIMER = SNOWBALL_TIMER + 100;
     },100);
+	// Set global positions
+	maxSnowmanPosX = gwhGame.width() - snowman.width();
+	maxSnowmanPosY = gwhGame.height() - 75;
+	SNOWMAN_OBJ.snowmanStyle.top = maxSnowmanPosY
     // Create enemies 
-
     maxEnemyPosX = gwhGame.width() - ENEMY_SIZE + 10;
     createEnemies(ENEMY_SIZE);
     createBunkers();
     // Move enemies
     let mv_en_id = setInterval ( function() {
-      moveEnemies(ENEMY_SIZE);
+      moveEnemies();
       if (NUM_ENEMIES === 0) {
-        newLevel()
+        clearInterval(cr_prj_id);
+		newLevel()
+		cr_prj_id = setInterval(function() {
+      createProjectile();
+    }, PROJECTILE_SPAWN_RATE[CUR_LEVEL]);
       }
 
       if (GAME_OVER) {
@@ -136,17 +137,16 @@ $(document).ready( function() {
         clearInterval(ch_co_id);
         clearInterval(rl_sb_id);
         clearInterval(mv_en_id);
-        clearInterval(cr_prj_id);
       }
     }, 100);
 
     let cr_prj_id = setInterval(function() {
       createProjectile();
-    }, PROJECTILE_SPAWN_RATE)
-  }, 5000);
-  }, 10000);
-	}, 10000);
-  }, 5000);
+    }, PROJECTILE_SPAWN_RATE[CUR_LEVEL])
+  }, 5);
+  }, 10);
+	}, 10);
+  }, 5);
 });
 
 
@@ -367,7 +367,7 @@ function createBunkers() {
 }
 
 //Handles enemy movement
-function moveEnemies(ENEM) {
+function moveEnemies() {
   if(!GAME_PAUSED){
     if (ENEMY_DIRECTION === "left") {
       $('.enemy').each( function() {
@@ -537,9 +537,7 @@ function newLevel(){
   $('#levelScreen').toggle();
   gwhGame.toggle();
   CUR_LEVEL++;
-  LEVEL_SPEED++;
-  ENEMY_SPEED = LEVEL_SPEED;
-  PROJECTILE_SPAWN_RATE -= 50;
+  ENEMY_SPEED = LEVEL_SPEED[CUR_LEVEL];
   GAME_PAUSED = true
   threshold = Math.ceil(ENEMY_DOUBLE_RATIO * ENEMY_PATTERN[CUR_LEVEL][0] * ENEMY_PATTERN[CUR_LEVEL][1]);
 	NUM_ENEMIES = ENEMY_PATTERN[CUR_LEVEL][1] * ENEMY_PATTERN[CUR_LEVEL][0]
@@ -557,14 +555,14 @@ function newLevel(){
 
 
 /* Things we need/want
-		N - level-specific enemy firing frequency and enemy speed
+		N - design levels
 		N - after the total amount of pre-built levels, congratulate the player
 		W - after completion, switch back to procedurally generating levels with random level-specific 
 			properties.
 		W - random enemies like the UFO in space invaders?
 		N - a shop
-			lives, cosmetics, double/triple shot, shots pierce through 1-2 enemies, shots go through bunkers, larger snowballs.
-				maybe permanently unlock upgrades, but players can only have 2/3 equiped at a time?
+			lives, cosmetics, double/triple shot, shots pierce through 1|2 enemies, shots go through bunkers, larger snowballs 1|2, quicker firing 1|2.
+				maybe permanently unlock upgrades, but players can only have 3 equiped at a time?
 		W - the ability to move and shoot (store last two inputs and on update, execute: < + S = left and shoot, < [null] = left, < > = nothing, etc.)
 		W - a restart button as opposed to refreshing
 		W - theme the game to UofM more? Maybe make the background more UofM, the snowman have UofM colors on its scarf etc.

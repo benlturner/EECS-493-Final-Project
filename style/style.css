@@ -29,6 +29,14 @@ body {
 .controls {
 	display: none;
 }
+.store {
+	display: none;
+	position: absolute;
+	top: 0;
+	width: 900px;
+	z-index: 5;
+	opacity: 50%;
+}
 #levelScreen {
 	display: none;
 }
