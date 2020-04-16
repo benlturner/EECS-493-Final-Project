@@ -24,7 +24,8 @@ var PROJECTILE_SPAWN_RATE = 1200;  // ms
 var SNOWBALL_RECHARGE = 400;
 var SNOWBALL_TIMER = 0;
 var GAME_OVER = false;
-var NUM_BUNKERS = [4,4,3,3,2,1];
+var BUNKERSIZE = 100;
+var NUM_BUNKERS = [4,4,3,3,2,2];
 var CUR_LEVEL = 0;
 var LEVEL_SPEED = 2;
 var GAME_PAUSED = false;
@@ -34,7 +35,7 @@ var GAME_PAUSED = false;
 var maxSnowmanPosX, maxSnowmanPosY, maxEnemyPosX;
 
 // Global Window Handles (gwh__)  --> replaced with Vue.js
-var gwhGame, gwhOver, gwhStatus;
+var gwhGame, gwhOver, gwhStatus, gwhObjectives, gwhControls;
 
 // Global Object Handles
 var snowman;
@@ -67,6 +68,8 @@ $(document).ready( function() {
   gwhGame   = $('.game-window');
   gwhOver   = $('.game-over');
   gwhStatus = $('.status-window');
+  gwhObjectives = $('.objectives');
+  gwhControls = $('.controls');
   snowman   = $('#enterprise');  // set the global snowman handle
 
   // Set global positions
@@ -75,14 +78,23 @@ $(document).ready( function() {
   
   SNOWMAN_OBJ.snowmanStyle.top = maxSnowmanPosY
   $(window).keydown(keydownRouter);
-
-// show rules first
-  gwhGame.hide();
-  gwhStatus.hide();
+// show titlescreen first
+  setTimeout (function () {
+  // show objectives
+  gwhObjectives.show();
+	setTimeout (function () {
+	// show controls
+	gwhObjectives.hide();
+	gwhControls.show();
+	setTimeout(function () {
+	// show level screen
+		$('#levelScreen').show();
+		$('#titleScreen').hide();
+		gwhControls.hide();
   setTimeout(function () {
-    $('#titleScreen').hide();
+	  gwhControls.hide();
     $('#levelScreen').hide();
-    $('#splashScreen').hide();
+    //$('#splashScreen').hide();
     gwhGame.show();
     gwhStatus.show();
 
@@ -131,8 +143,10 @@ $(document).ready( function() {
     let cr_prj_id = setInterval(function() {
       createProjectile();
     }, PROJECTILE_SPAWN_RATE)
-  }, 5000)
-
+  }, 5000);
+  }, 10000);
+	}, 10000);
+  }, 5000);
 });
 
 
@@ -148,6 +162,8 @@ function keydownRouter(e) {
     case KEYS.right:
       moveSnowman(e.which);
       break;
+	case KEYS.enter:
+		proceed();
     default:
       console.log("Invalid input!");
   }
@@ -336,18 +352,18 @@ function createEnemies(ENEMY_SIZE) {
 
 function createBunkers() {
   console.log('Creating bunkers...');
-  var bunkerSize = Math.floor(900 / (NUM_BUNKERS[CUR_LEVEL] * 2));
+  var bunkerSpacing = Math.floor((900 - (NUM_BUNKERS[CUR_LEVEL] * BUNKERSIZE)) / ((NUM_BUNKERS[CUR_LEVEL] + 1)));
   var i;
   for (i = 0; i < NUM_BUNKERS[CUR_LEVEL]; i++) {
     var bunkerDivStr = "<div id='b-" + bunkerIdx + "' class='bunker'></div>"
 		gwhGame.append(bunkerDivStr);
 		var $curBunker = $('#b-'+bunkerIdx);
 		$curBunker.css('position',"absolute");
-		$curBunker.css('left', ((bunkerSize/2) + (i * bunkerSize * 2)) + "px");
-		$curBunker.css('top', ((parseInt(gwhGame.height()) - 225) + "px"));
-		$curBunker.css('width', bunkerSize + "px");
-		$curBunker.css('height', bunkerSize + "px");
-		$curBunker.append("<img src='img/gift.png' height ='" + bunkerSize + " width =" + bunkerSize + "'/>");
+		$curBunker.css('left', ((bunkerSpacing) + (i * (BUNKERSIZE + bunkerSpacing))) + "px");
+		$curBunker.css('top', ((parseInt(gwhGame.height()) - 200) + "px"));
+		$curBunker.css('width', "112 px");
+		$curBunker.css('height', "112 px");
+		$curBunker.append("<img src='img/gift.png' height = " + BUNKERSIZE + " px width = " + BUNKERSIZE + " px'/>");
 		$curBunker.children('img').attr('position', 'absolute');
 		bunkerIdx++;
   }
@@ -541,42 +557,19 @@ function newLevel(){
   }, 5000)
 }
 
-/* Things added
-    game size parameters are hardcoded now
-    speed threshold function re-added
-    enemy movement speed, pojectile launch, and snowball generation sped up, make the game more realistic
-    points for hitting projectile
-    hit box for projectile and player
-    detecting enemy-player collisions better
-    game over when enemies get too low
-    end level when enemies are eliminated
-    stop intervals when level is over
-      currently goes to game over screen, but when levels are added that will be easy to fix
-    destructible bunkers (each is an image broken into multiple vertical cuts that independently detect collisions with snowballs and enemy collisons)
-      may need to make snowball slightly smaller
-    multiple levels
-    theme the game to UofM more? Maybe make the background more UofM, the snowman have UofM colors on its scarf etc.
-*/
 
 /* Things we need/want
-		[x] make everything (including movement speed) scale to the screen size.
-		[x] detecting enemy-player collisions better
-			only need to cheeck that they are below a y-value threshold and overlapping horizontally with player
-		[x] destructible bunkers (each is an image broken into multiple vertical cuts that independently detect collisions with snowballs and enemy collisons)
-      may need to make snowball slightly smaller
-    [x] if number is equal to zero, end the level
-    [x] if enemy 'top' gets to where the player is, game over
-		[x] multiple enemies
-		[x] randomly choosing enemy to shoot projectile
-			should only bottom enemies be able to shoot like in the game?
-				if we wanted this, we would keep track of each column of enemies' lowest member and on death, would update.
-		random enemies like the UFO in space invaders?
-		a shop
-			lives and upgrades to firing speed or new weapons? Cosmetics?
-		the ability to move and shoot (store last two inputs and on update, execute: < + S = left and shoot, < [null] = left, < > = nothing, etc.)
-		[x] multiple levels
-		a better rule overlay
-		a transition screen between levels
-		[x] theme the game to UofM more? Maybe make the background more UofM, the snowman have UofM colors on its scarf etc.
-		comment everything, remove useless code, replace magic numbers with variables
+		N - level-specific enemy firing frequency and enemy speed
+		N - after the total amount of pre-built levels, congratulate the player
+		W - after completion, switch back to procedurally generating levels with random level-specific 
+			properties.
+		W - random enemies like the UFO in space invaders?
+		N - a shop
+			lives, cosmetics, double/triple shot, shots pierce through 1-2 enemies, shots go through bunkers, larger snowballs.
+				maybe permanently unlock upgrades, but players can only have 2/3 equiped at a time?
+		W - the ability to move and shoot (store last two inputs and on update, execute: < + S = left and shoot, < [null] = left, < > = nothing, etc.)
+		W - a restart button as opposed to refreshing
+		W - theme the game to UofM more? Maybe make the background more UofM, the snowman have UofM colors on its scarf etc.
+		N - comment everything, remove useless code, replace magic numbers with variables
+
 */

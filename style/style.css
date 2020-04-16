@@ -14,12 +14,23 @@ body {
   background-color: #222;
   border-right: 3px solid #53f;
   float: left;
+  display: none;
 }
 .status-window {
   position: fixed;
   height: 50px;
   width: 100%;
   top: 550px;
+  display: none;
+}
+.objectives {
+	display: none;
+}
+.controls {
+	display: none;
+}
+#levelScreen {
+	display: none;
 }
 
 /* Game Objects */

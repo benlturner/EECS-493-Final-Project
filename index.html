@@ -16,20 +16,20 @@
 <!-- HTML -->
 <body>
   <div class='outer-container'>
-    <div id="titleScreen" style="left: 330; position:relative; top: 50;">
+    <div id="titleScreen" style="left: 330; position:relative; top: 200;">
       <h1><i>Maize Invaders</i></h1>
     </div>
     <div id="levelScreen" style="left: 380; position:relative; top: 200;">
       <h1 id='level'><i>Level {{level}}</i></h1>
     </div>
-	  <div id="splashScreen" style="left: 200; position:relative; top: 300;">
-          <h1><i>Controls:</i></h1>
-		  <ul>
-          <li> use arrow keys to move the player </li>
-		  <li> press [spacebar] to shoot snowballs at enemies</li>
-          <li> shoot all enemies before they reach the bottom of the screen </li>
-		  </ul>
-    </div>
+	<div>
+		<div class="objectives" style="position: absolute; top: 0; left: 0;">
+			<img src='img/objectives.png'>
+		</div>
+		<div class="controls" style="position: absolute; top: 0; left: 0;">
+			<img src='img/controls.png'>
+		</div>
+	</div>
     <div class='game-window' style="background-image: url('img/background.png')">
       <div id='enterprise' class='snowman' v-bind:style='snowmanStyle'>
         <img class='snowman' src='img/defaultSnowman.png'/>
@@ -37,7 +37,7 @@
       </div>
     </div>
 
-    <div class='game-over' style="display: none;">
+    <div class='game-over' style="display: none; text-align: center; position: relative; top: 250;">
       <h1>GAME OVER!</h1>
       <p>(refresh to play again)</p>
     </div>
