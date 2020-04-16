@@ -71,6 +71,12 @@ $(document).ready( function() {
   gwhObjectives = $('.objectives');
   gwhControls = $('.controls');
   snowman   = $('#enterprise');  // set the global snowman handle
+  // Set global positions
+  maxSnowmanPosX = gwhGame.width() - snowman.width();
+  maxSnowmanPosY = gwhGame.height() - 75;
+  
+  SNOWMAN_OBJ.snowmanStyle.top = maxSnowmanPosY
+  gwhGame.hide();
   $(window).keydown(keydownRouter);
 // show titlescreen first
   setTimeout (function () {
@@ -101,10 +107,6 @@ $(document).ready( function() {
     let rl_sb_id = setInterval (function() {
       SNOWBALL_TIMER = SNOWBALL_TIMER + 100;
     },100);
-	// Set global positions
-	maxSnowmanPosX = gwhGame.width() - snowman.width();
-	maxSnowmanPosY = gwhGame.height() - 75;
-	SNOWMAN_OBJ.snowmanStyle.top = maxSnowmanPosY
     // Create enemies 
     maxEnemyPosX = gwhGame.width() - ENEMY_SIZE + 10;
     createEnemies(ENEMY_SIZE);
@@ -143,10 +145,10 @@ $(document).ready( function() {
     let cr_prj_id = setInterval(function() {
       createProjectile();
     }, PROJECTILE_SPAWN_RATE[CUR_LEVEL])
-  }, 5);
-  }, 10);
-	}, 10);
-  }, 5);
+  }, 5000);
+  }, 10000);
+	}, 10000);
+  }, 5000);
 });
 
 
@@ -195,9 +197,13 @@ function checkCollisions() {
       var $curSnowball = $(this);  // define a local handle for this snowball
       $('.enemy').each( function() {
         var $curEnemy = $(this);  // define a local handle for this enemy
-
+        
+        off = 12
+        if ($curEnemy.children('img').attr('src') == 'img/snowman1ball.png'){
+          off = 25
+        }
         // For each snowball and enemy, check for collisions
-        if (isColliding($curSnowball, $curEnemy, 12)) {
+        if (isColliding($curSnowball, $curEnemy, off)) {
           // If a snowball and enemy collide, remove a ball from the enemy
           switch ($curEnemy.children('img').attr('src')) {
             case 'img/snowman.png': {
@@ -441,12 +447,10 @@ function createProjectile() {
     $curProjectile.css('width', astrSize+"px");
     $curProjectile.css('height', astrSize+"px");
 
-    if(Math.random() < 1/4){
+    if(Math.random() < 1/3){
       $curProjectile.append("<img src='img/blueBook.png' height='" + astrSize + "'/>")
-    } else if(Math.random() < 1/2) {
+    } else if(Math.random() < 2/3) {
       $curProjectile.append("<img src='img/icicle.png' height='" + astrSize + "'/>")
-    } else if(Math.random() < 3/4) {
-      $curProjectile.append("<img src='img/corona.png' height='" + astrSize + "'/>")
     } else {
       $curProjectile.append("<img src='img/glasses.png' height='" + astrSize + "'/>")
     } 
