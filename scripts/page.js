@@ -73,10 +73,11 @@ $(document).ready( function() {
   snowman   = $('#enterprise');  // set the global snowman handle
 
   // Set global positions
-  maxSnowmanPosX = gwhGame.width() - snowman.width() - 5;
+  maxSnowmanPosX = gwhGame.width() - snowman.width();
   maxSnowmanPosY = gwhGame.height() - 75;
   
   SNOWMAN_OBJ.snowmanStyle.top = maxSnowmanPosY
+  gwhGame.hide();
   $(window).keydown(keydownRouter);
 // show titlescreen first
   setTimeout (function () {
