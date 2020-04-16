@@ -35,7 +35,7 @@ var GAME_PAUSED = false;
 var maxSnowmanPosX, maxSnowmanPosY, maxEnemyPosX;
 
 // Global Window Handles (gwh__)  --> replaced with Vue.js
-var gwhGame, gwhOver, gwhStatus;
+var gwhGame, gwhOver, gwhStatus, gwhObjectives, gwhControls;
 
 // Global Object Handles
 var snowman;
@@ -68,6 +68,8 @@ $(document).ready( function() {
   gwhGame   = $('.game-window');
   gwhOver   = $('.game-over');
   gwhStatus = $('.status-window');
+  gwhObjectives = $('.objectives');
+  gwhControls = $('.controls');
   snowman   = $('#enterprise');  // set the global snowman handle
 
   // Set global positions
@@ -76,14 +78,23 @@ $(document).ready( function() {
   
   SNOWMAN_OBJ.snowmanStyle.top = maxSnowmanPosY
   $(window).keydown(keydownRouter);
-
-// show rules first
-  gwhGame.hide();
-  gwhStatus.hide();
+// show titlescreen first
+// show objectives
+  setTimeout (function () {
+  gwhObjectives.show();
+// show controls
+	setTimeout (function () {
+		gwhObjectives.hide();
+		gwhControls.show();
+// show level screen
+	setTimeout(function () {
+		$('#levelScreen').show();
+		$('#titleScreen').hide();
+		gwhControls.hide();
   setTimeout(function () {
-    $('#titleScreen').hide();
+	  gwhControls.hide();
     $('#levelScreen').hide();
-    $('#splashScreen').hide();
+    //$('#splashScreen').hide();
     gwhGame.show();
     gwhStatus.show();
 
@@ -132,8 +143,10 @@ $(document).ready( function() {
     let cr_prj_id = setInterval(function() {
       createProjectile();
     }, PROJECTILE_SPAWN_RATE)
-  }, 5000)
-
+  }, 5000);
+  }, 10000);
+	}, 10000);
+  }, 5000);
 });
 
 
@@ -149,6 +162,8 @@ function keydownRouter(e) {
     case KEYS.right:
       moveSnowman(e.which);
       break;
+	case KEYS.enter:
+		proceed();
     default:
       console.log("Invalid input!");
   }
