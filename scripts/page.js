@@ -24,6 +24,7 @@ var PROJECTILE_SPAWN_RATE = [1200,1100,1150,1050,1000,1100];  // ms
 var SNOWBALL_RECHARGE = 400;
 var SNOWBALL_TIMER = 0;
 var GAME_OVER = false;
+var IN_STORE = false;
 var BUNKERSIZE = 100;
 var NUM_BUNKERS = [4,4,3,3,2,2];
 var CUR_LEVEL = 0;
@@ -70,6 +71,7 @@ $(document).ready( function() {
   gwhStatus = $('.status-window');
   gwhObjectives = $('.objectives');
   gwhControls = $('.controls');
+  gwhStore = $('.store');
   snowman   = $('#enterprise');  // set the global snowman handle
   // Set global positions
   maxSnowmanPosX = gwhGame.width() - snowman.width();
@@ -91,6 +93,7 @@ $(document).ready( function() {
 	// show level screen
 		$('#levelScreen').show();
 		gwhControls.hide();
+    
   setTimeout(function () {
 	  gwhControls.hide();
     $('#levelScreen').hide();
@@ -99,9 +102,9 @@ $(document).ready( function() {
 
     setupIntervals();
   }, 5000);
-  }, 10000);
-  }, 10000);
-  }, 5000);
+  }, 100);
+  }, 100);
+  }, 50);
 });
 
 
@@ -203,6 +206,30 @@ function restartGame() {
     createBunkers();
     GAME_PAUSED = false;
   }, 5000);
+}
+
+// opens the game store
+function openStore() {
+  console.log("opening store");
+  IN_STORE = true;
+  GAME_PAUSED = true;
+  $('#levelScreen').hide();
+  gwhStore.show();
+}
+
+// closes the game store
+function closeStore() {
+  IN_STORE = false;
+  // go back to level page
+  gwhStore.hide();
+  $('#levelScreen').show();
+  createEnemies(ENEMY_SIZE);
+  createBunkers();
+  setTimeout(function() {
+    $('#levelScreen').hide();
+    gwhGame.show();
+    GAME_PAUSED = false;
+  }, 5000)
 }
 
 // Check for any collisions and update/remove the appropriate object if needed
@@ -571,23 +598,27 @@ function newLevel(){
   $('.projectile').remove();
   $('.bunker').remove();
   LEVEL_OBJ.level += 1
-  $('#levelScreen').toggle();
-  gwhGame.toggle();
+  $('#levelScreen').show();
+  gwhGame.hide();
   CUR_LEVEL++;
   ENEMY_SPEED = LEVEL_SPEED[CUR_LEVEL];
-  GAME_PAUSED = true
+  GAME_PAUSED = true;
   threshold = Math.ceil(ENEMY_DOUBLE_RATIO * ENEMY_PATTERN[CUR_LEVEL][0] * ENEMY_PATTERN[CUR_LEVEL][1]);
-	NUM_ENEMIES = ENEMY_PATTERN[CUR_LEVEL][1] * ENEMY_PATTERN[CUR_LEVEL][0]
+	NUM_ENEMIES = ENEMY_PATTERN[CUR_LEVEL][1] * ENEMY_PATTERN[CUR_LEVEL][0];
 	maxEnemyPosX += ENEMY_SIZE;
 	ENEMY_SIZE = 100 * 8 / (ENEMY_PATTERN[CUR_LEVEL][0] + 1);
 	maxEnemyPosX -= ENEMY_SIZE;
-  createEnemies(ENEMY_SIZE);
-  createBunkers();
-  setTimeout(function() {
-    $('#levelScreen').hide();
-    gwhGame.show();
-    GAME_PAUSED = false;
-  }, 5000)
+  // check if store is opened
+  console.log("in store!");
+  if (!IN_STORE) {
+    createEnemies(ENEMY_SIZE);
+    createBunkers();
+    setTimeout(function() {
+      $('#levelScreen').hide();
+      gwhGame.show();
+      GAME_PAUSED = false;
+    }, 5000)
+  }
 }
 
 

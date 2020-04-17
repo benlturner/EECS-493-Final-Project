@@ -21,8 +21,8 @@
     </div>
     <div id="levelScreen" style="left: 380; position:relative; top: 200;">
       <h1 id='level'><i>Level {{level}}</i></h1>
-      <div id="store">
-        <button> visit store </button>
+      <div id="store" v-if="level > 1">
+        <button onclick="openStore()"> visit store </button>
       </div>
     </div>
 	<div>
@@ -41,6 +41,7 @@
     </div>
 	<div class='store'>
 		<img src='img/store.jpg' style="width: 100%">
+    <button onclick="closeStore()"> close store </button>
 	</div>
     <div class='game-over' style="display: none; text-align: center; position: relative; top: 250;">
       <h1>GAME OVER!</h1>
