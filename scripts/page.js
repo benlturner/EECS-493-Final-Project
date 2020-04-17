@@ -56,7 +56,7 @@ var ENEMY_DESCENT_SPEED = [0.1, 0.25, 0.15, 0.2, 0.2, 0.5]	// Enemy Vertical Spe
 
 // Current Level Vars
 var threshold = Math.ceil(ENEMY_DOUBLE_RATIO * ENEMY_PATTERN[CUR_LEVEL][0] * ENEMY_PATTERN[CUR_LEVEL][1]);
-var NUM_ENEMIES = 1; // ENEMY_PATTERN[CUR_LEVEL][1] * ENEMY_PATTERN[CUR_LEVEL][0]
+var NUM_ENEMIES = ENEMY_PATTERN[CUR_LEVEL][1] * ENEMY_PATTERN[CUR_LEVEL][0];
 var ENEMY_SIZE = 100 * 8 / (ENEMY_PATTERN[CUR_LEVEL][0] + 1);
 
 var KEYS = {
@@ -466,7 +466,7 @@ function createEnemies(ENEMY_SIZE) {
 	console.log('Spawning enemies...');
 	var enemyOffset = 1.1*ENEMY_SIZE;
 	var i;
-	for (i = 0; i < 1; i++) { // ENEMY_PATTERN[CUR_LEVEL][0]
+	for (i = 0; i < ENEMY_PATTERN[CUR_LEVEL][0]; i++) {
 		var j;
 		for (j = 0; j < ENEMY_PATTERN[CUR_LEVEL][1]; j++) {
 			var enemyDivStr = "<div id='e-" + enemyIdx + "' class='enemy'></div>"
