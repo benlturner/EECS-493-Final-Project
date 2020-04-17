@@ -6,34 +6,34 @@ var projectileIdx = 1;
 var enemyIdx = 1;
 var bunkerIdx = 1;
 
-// Size Constants
-var MAX_PROJECTILE_SIZE   = 50;
-var MIN_PROJECTILE_SIZE   = 15;
+// Game Constants
+var OBJECT_REFRESH_RATE = 50;    // ms
+var ENEMY_DOUBLE_RATIO = 0.5;
 var PROJECTILE_SIZE     = 40;
 var PROJECTILE_SPEED      = 5;
-var SNOWBALL_SPEED        = 10;
-var SNOWMAN_SPEED          = 25;
-var ENEMY_DOUBLE_RATIO = 0.5;
-var ENEMY_SPEED = 2;
-var ENEMY_DIRECTION = "right";
-var OBJECT_REFRESH_RATE = 50;    // ms
 var SCORE_UNIT_PROJECTILE   = 5;
 var SCORE_UNIT_HIT          = 50;
 var SCORE_UNIT_KILL          = 100;
-var PROJECTILE_SPAWN_RATE = [1200,1100,1150,1050,1000,1100];  // ms
-var SNOWBALL_RECHARGE = 400;
-var SNOWBALL_TIMER = 0;
-var GAME_OVER = false;
-var IN_STORE = false;
+var SNOWMAN_SPEED          = 25;
+var SNOWBALL_SPEED        = 10;
 var BUNKERSIZE = 100;
-var NUM_BUNKERS = [4,4,3,3,2,2];
-var CUR_LEVEL = 0;
-var LEVEL_SPEED = [2,4,3,3,5,4];
-var GAME_PAUSED = false;
 
-
-// Size vars
+// Movement Restrictions
 var maxSnowmanPosX, maxSnowmanPosY, maxEnemyPosX;
+
+// Player Shop-affected vars
+var SNOWBALL_SIZE		= 20;
+var SNOWBALL_RECHARGE = 400;
+
+// Gamestate vars
+var ENEMY_DIRECTION = "right";
+var ENEMY_SPEED = 2;
+var SNOWBALL_TIMER = 0;
+var KEYARRAY = [false, false, false];
+var CUR_LEVEL = 0;
+var GAME_PAUSED = false;
+var GAME_OVER = false;
+
 
 // Global Window Handles (gwh__)  --> replaced with Vue.js
 var gwhGame, gwhOver, gwhStatus, gwhObjectives, gwhControls;
@@ -41,20 +41,22 @@ var gwhGame, gwhOver, gwhStatus, gwhObjectives, gwhControls;
 // Global Object Handles
 var snowman;
 
-var KEYS = {
-  left    : 37,
-  up      : 38,
-  right   : 39,
-  down    : 40,
-  shift   : 16,
-  spacebar: 32
-}
+// Level Data
+var ENEMY_PATTERN = [[7,1],[10,1],[15,1],[7,2],[10,2],[15,2]] // Enemies Wide, Enemies Deep
+var PROJECTILE_SPAWN_RATE = [1200,1100,1150,1050,1000,1100];  // ms
+var NUM_BUNKERS = [4,4,3,3,2,2];
+var LEVEL_SPEED = [2,4,3,3,5,4]; // Enemy Speed
 
-// Temporary Storage of Level Data
-var ENEMY_PATTERN = [[7,1],[10,1],[15,1],[7,2],[10,2],[15,2]] // scale
+// Current Level Vars
 var threshold = Math.ceil(ENEMY_DOUBLE_RATIO * ENEMY_PATTERN[CUR_LEVEL][0] * ENEMY_PATTERN[CUR_LEVEL][1]);
 var NUM_ENEMIES = ENEMY_PATTERN[CUR_LEVEL][1] * ENEMY_PATTERN[CUR_LEVEL][0]
 var ENEMY_SIZE = 100 * 8 / (ENEMY_PATTERN[CUR_LEVEL][0] + 1);
+
+var KEYS = {
+  left    : 37,
+  right   : 39,
+  spacebar: 32
+}
 
 ////  Functional Code  ////
 
@@ -80,6 +82,7 @@ $(document).ready( function() {
   SNOWMAN_OBJ.snowmanStyle.top = maxSnowmanPosY;
   gwhGame.hide();
   $(window).keydown(keydownRouter);
+  $(window).keyup(keyupRouter);
 // show titlescreen first
   setTimeout (function () {
   // show objectives
@@ -93,7 +96,7 @@ $(document).ready( function() {
 	// show level screen
 		$('#levelScreen').show();
 		gwhControls.hide();
-    
+
   setTimeout(function () {
 	  gwhControls.hide();
     $('#levelScreen').hide();
@@ -111,7 +114,8 @@ $(document).ready( function() {
 function keydownRouter(e) {
   switch (e.which) {
     case KEYS.spacebar: {
-  		if (SNOWBALL_TIMER > SNOWBALL_RECHARGE) {
+  	  KEYARRAY[0] = true;
+	  if (SNOWBALL_TIMER > SNOWBALL_RECHARGE) {
   			fireSnowball();
   		}
       console.log("spacebar pressed");
@@ -120,17 +124,67 @@ function keydownRouter(e) {
       }
       break;
 	  }
-    case KEYS.left:
-    case KEYS.right:
-      moveSnowman(e.which);
+    case KEYS.left: {
+	  KEYARRAY[1] = true;
+	  break;
+	}
+    case KEYS.right: {
+	  KEYARRAY[2] = true;
       break;
-	  case KEYS.enter:
-
-      break;
+	}
     default:
       console.log("Invalid input!");
   }
+  switch (KEYARRAY.join(' ')) {
+    case 'false false true': {
+		moveSnowman(KEYS.right);
+		break;
+	}
+	case 'true false true': {
+		moveSnowman(KEYS.right);
+		if (SNOWBALL_TIMER > SNOWBALL_RECHARGE) {
+  			fireSnowball();
+  		}
+		break;
+	}
+	case 'true false false': {
+		if (SNOWBALL_TIMER > SNOWBALL_RECHARGE) {
+  			fireSnowball();
+  		}
+		break;
+	}
+	case 'true true false': {
+		moveSnowman(KEYS.left);
+		if (SNOWBALL_TIMER > SNOWBALL_RECHARGE) {
+  			fireSnowball();
+  		}
+		break;
+	}
+	case 'false true false': {
+		moveSnowman(KEYS.left);
+		break;
+	}
+	default: {
+		console.log(KEYARRAY.join(' '));
+	}
+  }
   e.Handled = true;
+}
+
+function keyupRouter(e) {
+	switch (e.which) {
+		case KEYS.spacebar: {
+			KEYARRAY[0] = false;
+			break;
+		}
+		case KEYS.left: {
+			KEYARRAY[1] = false;
+			break;
+		}
+		case KEYS.right: {
+			KEYARRAY[2] = false;
+		}
+	}
 }
 
 // set up all the intervals and the game
@@ -183,8 +237,13 @@ function setupIntervals() {
 function restartGame() {
   GAME_OVER = false;
   GAME_PAUSED = true;
-  CUR_LEVEL = 1;
-  LEVEL_OBJ = 1;
+  CUR_LEVEL = 0;
+  LEVEL_OBJ.level = 1;
+  SCORE_OBJ.score = 0;
+  SNOWBALL_RECHARGE = 400;
+  SNOWBALL_SIZE		= 20;
+
+
   console.log("restarting...");
 
   gwhOver.hide();
@@ -501,18 +560,16 @@ function createProjectile() {
 
     projectileIdx++;  // update the index to maintain uniqueness next time
 
-    // Set size of the projectile (semi-randomized)
     var projectileEnemyID = Math.floor(Math.random() * NUM_ENEMIES);
-    var astrSize = (MAX_PROJECTILE_SIZE + MIN_PROJECTILE_SIZE)/2;
-    $curProjectile.css('width', astrSize+"px");
-    $curProjectile.css('height', astrSize+"px");
+    $curProjectile.css('width', PROJECTILE_SIZE+"px");
+    $curProjectile.css('height', PROJECTILE_SIZE+"px");
 
     if(Math.random() < 1/3){
-      $curProjectile.append("<img src='img/blueBook.png' height='" + astrSize + "'/>")
+      $curProjectile.append("<img src='img/blueBook.png' height='" + PROJECTILE_SIZE + "'/>")
     } else if(Math.random() < 2/3) {
-      $curProjectile.append("<img src='img/icicle.png' height='" + astrSize + "'/>")
+      $curProjectile.append("<img src='img/icicle.png' height='" + PROJECTILE_SIZE + "'/>")
     } else {
-      $curProjectile.append("<img src='img/glasses.png' height='" + astrSize + "'/>")
+      $curProjectile.append("<img src='img/glasses.png' height='" + PROJECTILE_SIZE + "'/>")
     }
 
     var index = 0
@@ -558,10 +615,10 @@ function fireSnowball() {
     curSnowball.css('top', SNOWMAN_OBJ.snowmanStyle.top);
     var rxPos = SNOWMAN_OBJ.snowmanStyle.left + snowman.width()/4;  // In order to center the snowball, shift by half the div size (recall: origin [0,0] is top-left of div)
     curSnowball.css('left', rxPos+"px");
-    curSnowball.css('height', "20px");
-    curSnowball.css('width', "20px");
-    curImg.css('height', "20px");
-    curImg.css('width', "20px");
+    curSnowball.css('height', SNOWBALL_SIZE + "px");
+    curSnowball.css('width', SNOWBALL_SIZE + "px");
+    curImg.css('height', SNOWBALL_SIZE + "px");
+    curImg.css('width', SNOWBALL_SIZE + "px");
 
 
     // Create movement update handler
@@ -597,6 +654,9 @@ function newLevel(){
   $('.snowball').remove();
   $('.projectile').remove();
   $('.bunker').remove();
+  if (CUR_LEVEL === 0) {
+	  $('#store').show();
+  }
   LEVEL_OBJ.level += 1
   $('#levelScreen').show();
   gwhGame.hide();
@@ -632,7 +692,6 @@ function newLevel(){
 			lives, cosmetics, double/triple shot, shots pierce through 1|2 enemies, shots go through bunkers, larger snowballs 1|2, quicker firing 1|2.
 				maybe permanently unlock upgrades, but players can only have 3 equiped at a time?
 		W - the ability to move and shoot (store last two inputs and on update, execute: < + S = left and shoot, < [null] = left, < > = nothing, etc.)
-		W - a restart button as opposed to refreshing
 		W - theme the game to UofM more? Maybe make the background more UofM, the snowman have UofM colors on its scarf etc.
 		N - comment everything, remove useless code, replace magic numbers with variables
 
