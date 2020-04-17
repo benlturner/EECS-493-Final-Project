@@ -33,7 +33,6 @@ body {
 	position: absolute;
 	top: 0;
 	width: 900px;
-	z-index: 5;
 	opacity: 50%;
 }
 #levelScreen {

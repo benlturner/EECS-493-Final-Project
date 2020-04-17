@@ -9,6 +9,7 @@ var snowballIdx   = 1;
 var projectileIdx = 1;
 var enemyIdx = 1;
 var bunkerIdx = 1;
+var itemIdx = 1;
 
 // Game Constants
 var OBJECT_REFRESH_RATE = 50;    // ms
@@ -21,6 +22,7 @@ var SCORE_UNIT_KILL          = 100;
 var SNOWMAN_SPEED          = 25;
 var SNOWBALL_SPEED        = 10;
 var BUNKERSIZE = 100;
+var ITEMSIZE = 100;
 
 // Movement Restrictions
 var maxSnowmanPosX, maxSnowmanPosY, maxEnemyPosX;
@@ -54,7 +56,7 @@ var ENEMY_DESCENT_SPEED = [0.1, 0.25, 0.15, 0.2, 0.2, 0.5]	// Enemy Vertical Spe
 
 // Current Level Vars
 var threshold = Math.ceil(ENEMY_DOUBLE_RATIO * ENEMY_PATTERN[CUR_LEVEL][0] * ENEMY_PATTERN[CUR_LEVEL][1]);
-var NUM_ENEMIES = ENEMY_PATTERN[CUR_LEVEL][1] * ENEMY_PATTERN[CUR_LEVEL][0]
+var NUM_ENEMIES = 1; // ENEMY_PATTERN[CUR_LEVEL][1] * ENEMY_PATTERN[CUR_LEVEL][0]
 var ENEMY_SIZE = 100 * 8 / (ENEMY_PATTERN[CUR_LEVEL][0] + 1);
 
 var KEYS = {
@@ -79,6 +81,7 @@ $(document).ready( function() {
   gwhObjectives = $('.objectives');
   gwhControls = $('.controls');
   gwhStore = $('.store');
+  gwhStoreItems = $('.items');
   snowman   = $('#enterprise');  // set the global snowman handle
   // Set global positions
   maxSnowmanPosX = gwhGame.width() - snowman.width();
@@ -120,10 +123,9 @@ function keydownRouter(e) {
   switch (e.which) {
     case KEYS.spacebar: {
   	  KEYARRAY[0] = true;
-	  if (SNOWBALL_TIMER > SNOWBALL_RECHARGE) {
+	    if (SNOWBALL_TIMER > SNOWBALL_RECHARGE) {
   			fireSnowball();
   		}
-      console.log("spacebar pressed");
       if (GAME_OVER) {
         restartGame();
       }
@@ -132,11 +134,11 @@ function keydownRouter(e) {
     case KEYS.left: {
 	  KEYARRAY[1] = true;
 	  break;
-	}
+	  }
     case KEYS.right: {
 	  KEYARRAY[2] = true;
       break;
-	}
+	  }
     default:
       console.log("Invalid input!");
   }
@@ -278,6 +280,8 @@ function openStore() {
   GAME_PAUSED = true;
   $('#levelScreen').hide();
   gwhStore.show();
+  gwhStoreItems.show();
+  createStoreItems();
 }
 
 // closes the game store
@@ -286,6 +290,7 @@ function closeStore() {
   IN_STORE = false;
   // go back to level page
   gwhStore.hide();
+  gwhStoreItems.hide();
   $('#levelScreen').show();
   createEnemies(ENEMY_SIZE);
   createBunkers();
@@ -461,7 +466,7 @@ function createEnemies(ENEMY_SIZE) {
 	console.log('Spawning enemies...');
 	var enemyOffset = 1.1*ENEMY_SIZE;
 	var i;
-	for (i = 0; i < ENEMY_PATTERN[CUR_LEVEL][0]; i++) {
+	for (i = 0; i < 1; i++) { // ENEMY_PATTERN[CUR_LEVEL][0]
 		var j;
 		for (j = 0; j < ENEMY_PATTERN[CUR_LEVEL][1]; j++) {
 			var enemyDivStr = "<div id='e-" + enemyIdx + "' class='enemy'></div>"
@@ -497,6 +502,43 @@ function createBunkers() {
 		bunkerIdx++;
   }
 
+}
+
+// create items that go in the game store
+function createStoreItems() {
+  console.log("creating items...");
+  var itemSpacing = Math.floor((900 - (NUM_BUNKERS[CUR_LEVEL] * BUNKERSIZE)) / ((NUM_BUNKERS[CUR_LEVEL] + 1)));
+  var i;
+  // bottom row
+  for (i = 0; i < 4; i++) {
+    var itemDivStr = "<div id='item-" + itemIdx + "' class='store-item'></div>"
+		gwhStoreItems.append(itemDivStr);
+		var $curBunker = $('#item-'+itemIdx);
+		$curBunker.css('position',"absolute");
+		$curBunker.css('left', ((itemSpacing) + (i * (ITEMSIZE + itemSpacing))) + "px");
+		$curBunker.css('top', ((parseInt(gwhGame.height()) - 200) + "px"));
+		$curBunker.css('width', "112 px");
+		$curBunker.css('height', "112 px");
+    $curBunker.css('opacity', "1");
+		$curBunker.append("<img src='img/item" + itemIdx + ".png' height = " + ITEMSIZE + " px width = " + ITEMSIZE + " px'/>");
+		$curBunker.children('img').attr('position', 'absolute');
+		itemIdx++;
+  }
+  // top row
+  for (i = 0; i < 4; i++) {
+    var itemDivStr = "<div id='item-" + itemIdx + "' class='store-item'></div>"
+		gwhStoreItems.append(itemDivStr);
+		var $curBunker = $('#item-'+itemIdx);
+		$curBunker.css('position',"absolute");
+		$curBunker.css('left', ((itemSpacing) + (i * (ITEMSIZE + itemSpacing))) + "px");
+		$curBunker.css('top', "150px");
+		$curBunker.css('width', "112 px");
+		$curBunker.css('height', "112 px");
+    $curBunker.css('opacity', "1");
+		$curBunker.append("<img src='img/item" + itemIdx + ".png' height = " + ITEMSIZE + " px width = " + ITEMSIZE + " px'/>");
+		$curBunker.children('img').attr('position', 'absolute');
+		itemIdx++;
+  }
 }
 
 //Handles enemy movement
