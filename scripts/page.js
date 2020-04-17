@@ -508,6 +508,7 @@ function createBunkers() {
 function createStoreItems() {
   console.log("creating items...");
   var itemSpacing = Math.floor((900 - (NUM_BUNKERS[CUR_LEVEL] * BUNKERSIZE)) / ((NUM_BUNKERS[CUR_LEVEL] + 1)));
+  var items = ["boots", "hat", "mittens", "scarf", "fireball", "shield", "rock", "blue fireball"];
   var i;
   // bottom row
   for (i = 0; i < 4; i++) {
@@ -521,6 +522,8 @@ function createStoreItems() {
 		$curBunker.css('height', "112 px");
     $curBunker.css('opacity', "1");
 		$curBunker.append("<img src='img/item" + itemIdx + ".png' height = " + ITEMSIZE + " px width = " + ITEMSIZE + " px'/>");
+    $curBunker.append("<p style='width: 100px; text-align: center;'>" + items[i] + "</p>");
+    $curBunker.append("<button style='display: block; width: 100px;'> buy </button>");
 		$curBunker.children('img').attr('position', 'absolute');
 		itemIdx++;
   }
@@ -536,7 +539,9 @@ function createStoreItems() {
 		$curBunker.css('height', "112 px");
     $curBunker.css('opacity', "1");
 		$curBunker.append("<img src='img/item" + itemIdx + ".png' height = " + ITEMSIZE + " px width = " + ITEMSIZE + " px'/>");
-		$curBunker.children('img').attr('position', 'absolute');
+    $curBunker.append("<p style='width: 100px; text-align: center;'>" + items[i] + "</p>");
+    $curBunker.append("<button style='display: block; width: 100px;'> buy </button>");
+    $curBunker.children('img').attr('position', 'absolute');
 		itemIdx++;
   }
 }
