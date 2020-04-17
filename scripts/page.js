@@ -1,5 +1,9 @@
 ////  Page-scoped globals  ////
 
+var cr_prj_id;  // global projectile counter variable
+				// global becsause it's reset in mutliple scope-d functions
+				// we need a better comment or at least name than this
+
 // Counters
 var snowballIdx   = 1;
 var projectileIdx = 1;
@@ -33,7 +37,7 @@ var KEYARRAY = [false, false, false];
 var CUR_LEVEL = 0;
 var GAME_PAUSED = false;
 var GAME_OVER = false;
-
+var IN_STORE = false;
 
 // Global Window Handles (gwh__)  --> replaced with Vue.js
 var gwhGame, gwhOver, gwhStatus, gwhObjectives, gwhControls;
@@ -42,10 +46,11 @@ var gwhGame, gwhOver, gwhStatus, gwhObjectives, gwhControls;
 var snowman;
 
 // Level Data
-var ENEMY_PATTERN = [[7,1],[10,1],[15,1],[7,2],[10,2],[15,2]] // Enemies Wide, Enemies Deep
+var ENEMY_PATTERN = [[7,1],[10,1],[15,1],[7,2],[10,2],[15,2]]; // Enemies Wide, Enemies Deep
 var PROJECTILE_SPAWN_RATE = [1200,1100,1150,1050,1000,1100];  // ms
 var NUM_BUNKERS = [4,4,3,3,2,2];
-var LEVEL_SPEED = [2,4,3,3,5,4]; // Enemy Speed
+var LEVEL_SPEED = [2,4,3,3,5,4]; 							// Enemy Horizontal Speed
+var ENEMY_DESCENT_SPEED = [0.1, 0.25, 0.15, 0.2, 0.2, 0.5]	// Enemy Vertical Speed
 
 // Current Level Vars
 var threshold = Math.ceil(ENEMY_DOUBLE_RATIO * ENEMY_PATTERN[CUR_LEVEL][0] * ENEMY_PATTERN[CUR_LEVEL][1]);
@@ -104,10 +109,10 @@ $(document).ready( function() {
     gwhStatus.show();
 
     setupIntervals();
-  }, 5000);
-  }, 100);
-  }, 100);
-  }, 50);
+  }, 50); //5000
+  }, 100); //10000
+  }, 100); //10000
+  }, 50); //5000
 });
 
 
@@ -202,15 +207,15 @@ function setupIntervals() {
   maxEnemyPosX = gwhGame.width() - ENEMY_SIZE + 10;
   createEnemies(ENEMY_SIZE);
   createBunkers();
+  cr_prj_id = setInterval(function() {
+    createProjectile();
+  }, PROJECTILE_SPAWN_RATE[CUR_LEVEL]);
   // Move enemies
   let mv_en_id = setInterval ( function() {
     moveEnemies();
     if (NUM_ENEMIES === 0) {
       clearInterval(cr_prj_id);
       newLevel();
-      cr_prj_id = setInterval(function() {
-        createProjectile();
-      }, PROJECTILE_SPAWN_RATE[CUR_LEVEL]);
     }
 
     if (GAME_OVER) {
@@ -219,7 +224,7 @@ function setupIntervals() {
       $('.snowball').remove();
       $('.projectile').remove();
       $('.enemy').remove();
-
+	  clearInterval(cr_prj_id);
       // Hide primary windows
       gwhGame.hide();
 
@@ -227,10 +232,6 @@ function setupIntervals() {
       gwhOver.show();
     }
   }, 100);
-
-  let cr_prj_id = setInterval(function() {
-    createProjectile();
-  }, PROJECTILE_SPAWN_RATE[CUR_LEVEL]);
 }
 
 // Restarts the game when user presses the spacebar
@@ -242,19 +243,22 @@ function restartGame() {
   SCORE_OBJ.score = 0;
   SNOWBALL_RECHARGE = 400;
   SNOWBALL_SIZE		= 20;
-
-
   console.log("restarting...");
 
   gwhOver.hide();
   $('.snowball').remove();
   $('.projectile').remove();
   $('.bunker').remove();
+  $('#store').hide();
   $('#levelScreen').show();
 
   setTimeout(function() {
+	cr_prj_id = setInterval(function() {
+        createProjectile();
+      }, PROJECTILE_SPAWN_RATE[CUR_LEVEL]);
     gwhGame.show();
     $('#levelScreen').hide();
+	ENEMY_DIRECTION = "right";
     ENEMY_SPEED = LEVEL_SPEED[CUR_LEVEL];
     threshold = Math.ceil(ENEMY_DOUBLE_RATIO * ENEMY_PATTERN[CUR_LEVEL][0] * ENEMY_PATTERN[CUR_LEVEL][1]);
   	NUM_ENEMIES = ENEMY_PATTERN[CUR_LEVEL][1] * ENEMY_PATTERN[CUR_LEVEL][0];
@@ -278,12 +282,16 @@ function openStore() {
 
 // closes the game store
 function closeStore() {
+  $('#store').hide();
   IN_STORE = false;
   // go back to level page
   gwhStore.hide();
   $('#levelScreen').show();
   createEnemies(ENEMY_SIZE);
   createBunkers();
+  cr_prj_id = setInterval(function() {
+        createProjectile();
+      }, PROJECTILE_SPAWN_RATE[CUR_LEVEL]);
   setTimeout(function() {
     $('#levelScreen').hide();
     gwhGame.show();
@@ -501,7 +509,7 @@ function moveEnemies() {
           ENEMY_DIRECTION = "right";
           $('.enemy').each( function() {
             var $curEnemy = $(this);
-            $curEnemy.css('top', parseInt($curEnemy.css('top')) + (ENEMY_SIZE / 10))
+            $curEnemy.css('top', parseInt($curEnemy.css('top')) + (ENEMY_SIZE  * ENEMY_DESCENT_SPEED[CUR_LEVEL]));
             if (parseInt($curEnemy.css('top')) > 450) {
               GAME_OVER = true;
             }
@@ -523,7 +531,7 @@ function moveEnemies() {
           ENEMY_DIRECTION = "left";
           $('.enemy').each( function() {
             var $curEnemy = $(this);
-            $curEnemy.css('top', parseInt($curEnemy.css('top')) + (ENEMY_SIZE / 10))
+            $curEnemy.css('top', parseInt($curEnemy.css('top')) + (ENEMY_SIZE * ENEMY_DESCENT_SPEED[CUR_LEVEL]));
             if (parseInt($curEnemy.css('top')) > 450) {
               GAME_OVER = true;
             }
@@ -654,9 +662,7 @@ function newLevel(){
   $('.snowball').remove();
   $('.projectile').remove();
   $('.bunker').remove();
-  if (CUR_LEVEL === 0) {
-	  $('#store').show();
-  }
+  $('#store').show();
   LEVEL_OBJ.level += 1
   $('#levelScreen').show();
   gwhGame.hide();
@@ -670,15 +676,18 @@ function newLevel(){
 	maxEnemyPosX -= ENEMY_SIZE;
   // check if store is opened
   console.log("in store!");
-  if (!IN_STORE) {
-    createEnemies(ENEMY_SIZE);
-    createBunkers();
-    setTimeout(function() {
+  setTimeout(function() {
+    if (!IN_STORE) {
+	  createEnemies(ENEMY_SIZE);
+      createBunkers();
+	  cr_prj_id = setInterval(function() {
+        createProjectile();
+      }, PROJECTILE_SPAWN_RATE[CUR_LEVEL]);
       $('#levelScreen').hide();
       gwhGame.show();
       GAME_PAUSED = false;
-    }, 5000)
-  }
+    }
+  }, 5000)
 }
 
 
