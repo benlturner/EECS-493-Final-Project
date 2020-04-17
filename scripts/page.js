@@ -7,10 +7,9 @@ var enemyIdx = 1;
 var bunkerIdx = 1;
 
 // Size Constants
-var MAX_PROJECTILE_SIZE   = 50;
-var MIN_PROJECTILE_SIZE   = 15;
 var PROJECTILE_SIZE     = 40;
 var PROJECTILE_SPEED      = 5;
+var SNOWBALL_SIZE		= 20;
 var SNOWBALL_SPEED        = 10;
 var SNOWMAN_SPEED          = 25;
 var ENEMY_DOUBLE_RATIO = 0.5;
@@ -180,8 +179,13 @@ function setupIntervals() {
 function restartGame() {
   GAME_OVER = false;
   GAME_PAUSED = true;
-  CUR_LEVEL = 1;
+  CUR_LEVEL = 0;
   LEVEL_OBJ = 1;
+  SCORE_OBJ.score = 0;
+  SNOWBALL_RECHARGE = 400;
+  SNOWBALL_SIZE		= 20;
+  
+  
   console.log("restarting...");
 
   gwhOver.hide();
@@ -474,18 +478,16 @@ function createProjectile() {
 
     projectileIdx++;  // update the index to maintain uniqueness next time
 
-    // Set size of the projectile (semi-randomized)
     var projectileEnemyID = Math.floor(Math.random() * NUM_ENEMIES);
-    var astrSize = (MAX_PROJECTILE_SIZE + MIN_PROJECTILE_SIZE)/2;
-    $curProjectile.css('width', astrSize+"px");
-    $curProjectile.css('height', astrSize+"px");
+    $curProjectile.css('width', PROJECTILE_SIZE+"px");
+    $curProjectile.css('height', PROJECTILE_SIZE+"px");
 
     if(Math.random() < 1/3){
-      $curProjectile.append("<img src='img/blueBook.png' height='" + astrSize + "'/>")
+      $curProjectile.append("<img src='img/blueBook.png' height='" + PROJECTILE_SIZE + "'/>")
     } else if(Math.random() < 2/3) {
-      $curProjectile.append("<img src='img/icicle.png' height='" + astrSize + "'/>")
+      $curProjectile.append("<img src='img/icicle.png' height='" + PROJECTILE_SIZE + "'/>")
     } else {
-      $curProjectile.append("<img src='img/glasses.png' height='" + astrSize + "'/>")
+      $curProjectile.append("<img src='img/glasses.png' height='" + PROJECTILE_SIZE + "'/>")
     }
 
     var index = 0
@@ -531,10 +533,10 @@ function fireSnowball() {
     curSnowball.css('top', SNOWMAN_OBJ.snowmanStyle.top);
     var rxPos = SNOWMAN_OBJ.snowmanStyle.left + snowman.width()/4;  // In order to center the snowball, shift by half the div size (recall: origin [0,0] is top-left of div)
     curSnowball.css('left', rxPos+"px");
-    curSnowball.css('height', "20px");
-    curSnowball.css('width', "20px");
-    curImg.css('height', "20px");
-    curImg.css('width', "20px");
+    curSnowball.css('height', SNOWBALL_SIZE + "px");
+    curSnowball.css('width', SNOWBALL_SIZE + "px");
+    curImg.css('height', SNOWBALL_SIZE + "px");
+    curImg.css('width', SNOWBALL_SIZE + "px");
 
 
     // Create movement update handler
@@ -601,7 +603,6 @@ function newLevel(){
 			lives, cosmetics, double/triple shot, shots pierce through 1|2 enemies, shots go through bunkers, larger snowballs 1|2, quicker firing 1|2.
 				maybe permanently unlock upgrades, but players can only have 3 equiped at a time?
 		W - the ability to move and shoot (store last two inputs and on update, execute: < + S = left and shoot, < [null] = left, < > = nothing, etc.)
-		W - a restart button as opposed to refreshing
 		W - theme the game to UofM more? Maybe make the background more UofM, the snowman have UofM colors on its scarf etc.
 		N - comment everything, remove useless code, replace magic numbers with variables
 
