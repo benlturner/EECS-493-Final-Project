@@ -109,7 +109,7 @@ $(document).ready( function() {
     gwhStatus.show();
 
     setupIntervals();
-  }, 50); //5000
+  }, 5000); //5000
   }, 100); //10000
   }, 100); //10000
   }, 50); //5000
@@ -258,7 +258,7 @@ function restartGame() {
       }, PROJECTILE_SPAWN_RATE[CUR_LEVEL]);
     gwhGame.show();
     $('#levelScreen').hide();
-	ENEMY_DIRECTION = "right";
+	  ENEMY_DIRECTION = "right";
     ENEMY_SPEED = LEVEL_SPEED[CUR_LEVEL];
     threshold = Math.ceil(ENEMY_DOUBLE_RATIO * ENEMY_PATTERN[CUR_LEVEL][0] * ENEMY_PATTERN[CUR_LEVEL][1]);
   	NUM_ENEMIES = ENEMY_PATTERN[CUR_LEVEL][1] * ENEMY_PATTERN[CUR_LEVEL][0];
