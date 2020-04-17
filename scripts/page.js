@@ -572,6 +572,9 @@ function newLevel(){
   $('.snowball').remove();
   $('.projectile').remove();
   $('.bunker').remove();
+  if (CUR_LEVEL === 0) {
+	  $('#store').show();
+  }
   LEVEL_OBJ.level += 1
   $('#levelScreen').toggle();
   gwhGame.toggle();

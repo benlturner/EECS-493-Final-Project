@@ -40,6 +40,10 @@ body {
 	display: none;
 }
 
+#store {
+	display: none;
+}
+
 /* Game Objects */
 #enterprise {
   position: absolute;
