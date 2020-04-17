@@ -696,12 +696,9 @@ function newLevel(){
 		N - after the total amount of pre-built levels, congratulate the player
 		W - after completion, switch back to procedurally generating levels with random level-specific
 			properties.
-		W - random enemies like the UFO in space invaders?
 		N - a shop
 			lives, cosmetics, double/triple shot, shots pierce through 1|2 enemies, shots go through bunkers, larger snowballs 1|2, quicker firing 1|2.
 				maybe permanently unlock upgrades, but players can only have 3 equiped at a time?
-		W - the ability to move and shoot (store last two inputs and on update, execute: < + S = left and shoot, < [null] = left, < > = nothing, etc.)
 		W - theme the game to UofM more? Maybe make the background more UofM, the snowman have UofM colors on its scarf etc.
-		N - comment everything, remove useless code, replace magic numbers with variables
-
+		N - comment everything, remove useless code, replace magic numbers with variables, shrink code using helper functions
 */
