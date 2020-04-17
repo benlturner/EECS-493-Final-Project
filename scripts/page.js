@@ -6,32 +6,34 @@ var projectileIdx = 1;
 var enemyIdx = 1;
 var bunkerIdx = 1;
 
-// Size Constants
+// Game Constants
+var OBJECT_REFRESH_RATE = 50;    // ms
+var ENEMY_DOUBLE_RATIO = 0.5;
 var PROJECTILE_SIZE     = 40;
 var PROJECTILE_SPEED      = 5;
-var SNOWBALL_SIZE		= 20;
-var SNOWBALL_SPEED        = 10;
-var SNOWMAN_SPEED          = 25;
-var ENEMY_DOUBLE_RATIO = 0.5;
-var ENEMY_SPEED = 2;
-var ENEMY_DIRECTION = "right";
-var OBJECT_REFRESH_RATE = 50;    // ms
 var SCORE_UNIT_PROJECTILE   = 5;
 var SCORE_UNIT_HIT          = 50;
 var SCORE_UNIT_KILL          = 100;
-var PROJECTILE_SPAWN_RATE = [1200,1100,1150,1050,1000,1100];  // ms
-var SNOWBALL_RECHARGE = 400;
-var SNOWBALL_TIMER = 0;
-var GAME_OVER = false;
+var SNOWMAN_SPEED          = 25;
+var SNOWBALL_SPEED        = 10;
 var BUNKERSIZE = 100;
-var NUM_BUNKERS = [4,4,3,3,2,2];
-var CUR_LEVEL = 0;
-var LEVEL_SPEED = [2,4,3,3,5,4];
-var GAME_PAUSED = false;
 
-
-// Size vars
+// Movement Restrictions
 var maxSnowmanPosX, maxSnowmanPosY, maxEnemyPosX;
+
+// Player Shop-affected vars
+var SNOWBALL_SIZE		= 20;
+var SNOWBALL_RECHARGE = 400;
+
+// Gamestate vars
+var ENEMY_DIRECTION = "right";
+var ENEMY_SPEED = 2;
+var SNOWBALL_TIMER = 0;
+var KEYARRAY = [false, false, false];
+var CUR_LEVEL = 0;
+var GAME_PAUSED = false;
+var GAME_OVER = false;
+
 
 // Global Window Handles (gwh__)  --> replaced with Vue.js
 var gwhGame, gwhOver, gwhStatus, gwhObjectives, gwhControls;
@@ -39,20 +41,22 @@ var gwhGame, gwhOver, gwhStatus, gwhObjectives, gwhControls;
 // Global Object Handles
 var snowman;
 
-var KEYS = {
-  left    : 37,
-  up      : 38,
-  right   : 39,
-  down    : 40,
-  shift   : 16,
-  spacebar: 32
-}
+// Level Data
+var ENEMY_PATTERN = [[7,1],[10,1],[15,1],[7,2],[10,2],[15,2]] // Enemies Wide, Enemies Deep
+var PROJECTILE_SPAWN_RATE = [1200,1100,1150,1050,1000,1100];  // ms
+var NUM_BUNKERS = [4,4,3,3,2,2];
+var LEVEL_SPEED = [2,4,3,3,5,4]; // Enemy Speed
 
-// Temporary Storage of Level Data
-var ENEMY_PATTERN = [[7,1],[10,1],[15,1],[7,2],[10,2],[15,2]] // scale
+// Current Level Vars
 var threshold = Math.ceil(ENEMY_DOUBLE_RATIO * ENEMY_PATTERN[CUR_LEVEL][0] * ENEMY_PATTERN[CUR_LEVEL][1]);
 var NUM_ENEMIES = ENEMY_PATTERN[CUR_LEVEL][1] * ENEMY_PATTERN[CUR_LEVEL][0]
 var ENEMY_SIZE = 100 * 8 / (ENEMY_PATTERN[CUR_LEVEL][0] + 1);
+
+var KEYS = {
+  left    : 37,
+  right   : 39,
+  spacebar: 32
+}
 
 ////  Functional Code  ////
 
@@ -77,6 +81,7 @@ $(document).ready( function() {
   SNOWMAN_OBJ.snowmanStyle.top = maxSnowmanPosY;
   gwhGame.hide();
   $(window).keydown(keydownRouter);
+  $(window).keyup(keyupRouter);
 // show titlescreen first
   setTimeout (function () {
   // show objectives
@@ -107,7 +112,8 @@ $(document).ready( function() {
 function keydownRouter(e) {
   switch (e.which) {
     case KEYS.spacebar: {
-  		if (SNOWBALL_TIMER > SNOWBALL_RECHARGE) {
+  	  KEYARRAY[0] = true;
+	  if (SNOWBALL_TIMER > SNOWBALL_RECHARGE) {
   			fireSnowball();
   		}
       console.log("spacebar pressed");
@@ -116,17 +122,67 @@ function keydownRouter(e) {
       }
       break;
 	  }
-    case KEYS.left:
-    case KEYS.right:
-      moveSnowman(e.which);
+    case KEYS.left: {
+	  KEYARRAY[1] = true;
+	  break;
+	}
+    case KEYS.right: {
+	  KEYARRAY[2] = true;
       break;
-	  case KEYS.enter:
-
-      break;
+	}
     default:
       console.log("Invalid input!");
   }
+  switch (KEYARRAY.join(' ')) {
+    case 'false false true': {
+		moveSnowman(KEYS.right);
+		break;
+	}
+	case 'true false true': {
+		moveSnowman(KEYS.right);
+		if (SNOWBALL_TIMER > SNOWBALL_RECHARGE) {
+  			fireSnowball();
+  		}
+		break;
+	}
+	case 'true false false': {
+		if (SNOWBALL_TIMER > SNOWBALL_RECHARGE) {
+  			fireSnowball();
+  		}
+		break;
+	}
+	case 'true true false': {
+		moveSnowman(KEYS.left);
+		if (SNOWBALL_TIMER > SNOWBALL_RECHARGE) {
+  			fireSnowball();
+  		}
+		break;
+	}
+	case 'false true false': {
+		moveSnowman(KEYS.left);
+		break;
+	}
+	default: {
+		console.log(KEYARRAY.join(' '));
+	}
+  }
   e.Handled = true;
+}
+
+function keyupRouter(e) {
+	switch (e.which) {
+		case KEYS.spacebar: {
+			KEYARRAY[0] = false;
+			break;
+		}
+		case KEYS.left: {
+			KEYARRAY[1] = false;
+			break;
+		}
+		case KEYS.right: {
+			KEYARRAY[2] = false;
+		}
+	}
 }
 
 // set up all the intervals and the game
@@ -180,7 +236,7 @@ function restartGame() {
   GAME_OVER = false;
   GAME_PAUSED = true;
   CUR_LEVEL = 0;
-  LEVEL_OBJ = 1;
+  LEVEL_OBJ.level = 1;
   SCORE_OBJ.score = 0;
   SNOWBALL_RECHARGE = 400;
   SNOWBALL_SIZE		= 20;
