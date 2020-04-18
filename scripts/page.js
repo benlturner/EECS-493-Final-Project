@@ -9,6 +9,7 @@ var snowballIdx   = 1;
 var projectileIdx = 1;
 var enemyIdx = 1;
 var bunkerIdx = 1;
+var itemIdx = 1;
 
 // Game Constants
 var OBJECT_REFRESH_RATE = 50;    // ms
@@ -21,6 +22,7 @@ var SCORE_UNIT_KILL          = 100;
 var SNOWMAN_SPEED          = 25;
 var SNOWBALL_SPEED        = 10;
 var BUNKERSIZE = 100;
+var ITEMSIZE = 100;
 
 // Movement Restrictions
 var maxSnowmanPosX, maxSnowmanPosY, maxEnemyPosX;
@@ -84,6 +86,7 @@ $(document).ready( function() {
   gwhObjectives = $('.objectives');
   gwhControls = $('.controls');
   gwhStore = $('.store');
+  gwhStoreItems = $('.items');
   snowman   = $('#enterprise');  // set the global snowman handle
   // Set global positions
   maxSnowmanPosX = gwhGame.width() - snowman.width();
@@ -137,7 +140,7 @@ function keydownRouter(e) {
 	}
     case KEYS.spacebar: {
   	  KEYARRAY[0] = true;
-	  if (SNOWBALL_TIMER > SNOWBALL_RECHARGE) {
+	    if (SNOWBALL_TIMER > SNOWBALL_RECHARGE) {
   			fireSnowball();
   		}
       break;
@@ -145,11 +148,11 @@ function keydownRouter(e) {
     case KEYS.left: {
 	  KEYARRAY[1] = true;
 	  break;
-	}
+	  }
     case KEYS.right: {
 	  KEYARRAY[2] = true;
       break;
-	}
+	  }
     default:
       console.log("Invalid input!");
   }
@@ -306,6 +309,8 @@ function openStore() {
   IN_STORE = true;
   $('#levelScreen').hide();
   gwhStore.show();
+  gwhStoreItems.show();
+  createStoreItems();
 }
 
 // closes the game store
@@ -314,6 +319,7 @@ function closeStore() {
   IN_STORE = false;
   // go back to level page
   gwhStore.hide();
+  gwhStoreItems.hide();
   $('#levelScreen').show();
   createEnemies(ENEMY_SIZE);
   createBunkers();
@@ -524,6 +530,48 @@ function createBunkers() {
 		bunkerIdx++;
   }
 
+}
+
+// create items that go in the game store
+function createStoreItems() {
+  console.log("creating items...");
+  var itemSpacing = Math.floor((900 - (NUM_BUNKERS[CUR_LEVEL] * BUNKERSIZE)) / ((NUM_BUNKERS[CUR_LEVEL] + 1)));
+  var items = ["boots", "hat", "mittens", "scarf", "fireball", "shield", "rock", "blue fireball"];
+  var i;
+  // bottom row
+  for (i = 0; i < 4; i++) {
+    var itemDivStr = "<div id='item-" + itemIdx + "' class='store-item'></div>"
+		gwhStoreItems.append(itemDivStr);
+		var $curBunker = $('#item-'+itemIdx);
+		$curBunker.css('position',"absolute");
+		$curBunker.css('left', ((itemSpacing) + (i * (ITEMSIZE + itemSpacing))) + "px");
+		$curBunker.css('top', ((parseInt(gwhGame.height()) - 200) + "px"));
+		$curBunker.css('width', "112 px");
+		$curBunker.css('height', "112 px");
+    $curBunker.css('opacity', "1");
+		$curBunker.append("<img src='img/item" + itemIdx + ".png' height = " + ITEMSIZE + " px width = " + ITEMSIZE + " px'/>");
+    $curBunker.append("<p style='width: 100px; text-align: center;'>" + items[i] + "</p>");
+    $curBunker.append("<button style='display: block; width: 100px;'> buy </button>");
+		$curBunker.children('img').attr('position', 'absolute');
+		itemIdx++;
+  }
+  // top row
+  for (i = 0; i < 4; i++) {
+    var itemDivStr = "<div id='item-" + itemIdx + "' class='store-item'></div>"
+		gwhStoreItems.append(itemDivStr);
+		var $curBunker = $('#item-'+itemIdx);
+		$curBunker.css('position',"absolute");
+		$curBunker.css('left', ((itemSpacing) + (i * (ITEMSIZE + itemSpacing))) + "px");
+		$curBunker.css('top', "150px");
+		$curBunker.css('width', "112 px");
+		$curBunker.css('height', "112 px");
+    $curBunker.css('opacity', "1");
+		$curBunker.append("<img src='img/item" + itemIdx + ".png' height = " + ITEMSIZE + " px width = " + ITEMSIZE + " px'/>");
+    $curBunker.append("<p style='width: 100px; text-align: center;'>" + items[i] + "</p>");
+    $curBunker.append("<button style='display: block; width: 100px;'> buy </button>");
+    $curBunker.children('img').attr('position', 'absolute');
+		itemIdx++;
+  }
 }
 
 //Handles enemy movement
