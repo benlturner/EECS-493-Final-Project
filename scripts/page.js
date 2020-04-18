@@ -90,7 +90,7 @@ $(document).ready( function() {
   snowman   = $('#enterprise');  // set the global snowman handle
   // Set global positions
   maxSnowmanPosX = gwhGame.width() - snowman.width();
-  maxSnowmanPosY = gwhGame.height() - 85;
+  maxSnowmanPosY = gwhGame.height() - 70;
 
   SNOWMAN_OBJ.snowmanStyle.top = maxSnowmanPosY;
   gwhGame.hide();
@@ -268,7 +268,7 @@ function restartGame() {
   SCORE_OBJ.score = 0;
   SNOWBALL_RECHARGE = 400;
   SNOWBALL_SIZE		= 20;
-  SNOWMAN_OBJ.snowmanStyle.lives = 1;
+  SCORE_OBJ.lives = 1;
   console.log("restarting...");
   $('#winner').hide();
   gwhOver.hide();
@@ -458,9 +458,9 @@ function checkCollisions() {
     $('.projectile').each( function() {
       var $curProjectile = $(this);
       if (isColliding($curProjectile, snowman, 0)) {
-		SNOWMAN_OBJ.snowmanStyle.lives -=1;
+		SCORE_OBJ.lives -=1;
 		$curProjectile.remove();
-		if (SNOWMAN_OBJ.snowmanStyle.lives === 0) {
+		if (SCORE_OBJ.lives === 0) {
 			GAME_OVER = true;
 			GAME_PAUSED = true;
 		}

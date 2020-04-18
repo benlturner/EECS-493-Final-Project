@@ -69,6 +69,8 @@ body {
 
 /* Score Objects */
 .score-box {
+  top: 5;
+  position: relative;
   text-align: left;
   font-size: 42px;
   font-weight: bold;

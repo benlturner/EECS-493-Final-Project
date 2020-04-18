@@ -43,7 +43,6 @@
     <div class='game-window' style="background-image: url('img/background.png')">
       <div id='enterprise' class='snowman' v-bind:style='snowmanStyle'>
         <img class='snowman' src='img/defaultSnowman.png'/>
-        <div id ='lives'>{{ snowmanStyle.lives }}</div>
       </div>
     </div>
 	<div class='store'>
@@ -59,6 +58,7 @@
 
     <div class='status-window' style='text-align: left'>
       <div id='score' class='score-box'>Score: {{score}}</div>
+	  <div id='lives' class='score-box' style="position: relative; left: 720px; top: -43px">Lives: {{lives}}</div>
     </div>
   </div>
 </body>
