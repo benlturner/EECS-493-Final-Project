@@ -121,10 +121,10 @@ $(document).ready( function() {
     gwhStatus.show();
 
     setupIntervals();
-  }, 5000); //5000
-  }, 100); //10000
-  }, 100); //10000
-  }, 50); //5000
+  }, 5000);
+  }, 10000);
+  }, 10000);
+  }, 5000);
 });
 
 function fire() {

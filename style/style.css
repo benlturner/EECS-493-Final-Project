@@ -40,7 +40,7 @@ body {
 }
 
 #store {
-	/*display: none;*/
+	display: none;
 }
 
 #open_button {
