@@ -44,6 +44,11 @@ body {
 	display: none;
 }
 
+#winner {
+	text-align: center;
+	display: none;
+}
+
 /* Game Objects */
 #enterprise {
   position: absolute;

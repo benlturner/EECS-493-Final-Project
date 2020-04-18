@@ -37,6 +37,8 @@ var KEYARRAY = [false, false, false];
 var CUR_LEVEL = 0;
 var GAME_PAUSED = false;
 var GAME_OVER = false;
+var GAME_COMPLETE = false;
+var GAME_CONTINUE = false;
 var IN_STORE = false;
 
 // Global Window Handles (gwh__)  --> replaced with Vue.js
@@ -46,21 +48,24 @@ var gwhGame, gwhOver, gwhStatus, gwhObjectives, gwhControls;
 var snowman;
 
 // Level Data
-var ENEMY_PATTERN = [[7,1],[10,1],[15,1],[7,2],[10,2],[15,2]]; // Enemies Wide, Enemies Deep
-var PROJECTILE_SPAWN_RATE = [1200,1100,1150,1050,1000,1100];  // ms
-var NUM_BUNKERS = [4,4,3,3,2,2];
-var LEVEL_SPEED = [2,4,3,3,5,4]; 							// Enemy Horizontal Speed
-var ENEMY_DESCENT_SPEED = [0.1, 0.25, 0.15, 0.2, 0.2, 0.5]	// Enemy Vertical Speed
+var ENEMY_PATTERN = [[2,1]]; // Enemies Wide, Enemies Deep
+var PROJECTILE_SPAWN_RATE = [10200];  // ms
+var NUM_BUNKERS = [4];
+var LEVEL_SPEED = [2]; 							// Enemy Horizontal Speed
+var ENEMY_DESCENT_SPEED = [0.1]	// Enemy Vertical Speed
+const NUM_LEVELS = ENEMY_PATTERN.length;
 
 // Current Level Vars
 var threshold = Math.ceil(ENEMY_DOUBLE_RATIO * ENEMY_PATTERN[CUR_LEVEL][0] * ENEMY_PATTERN[CUR_LEVEL][1]);
 var NUM_ENEMIES = ENEMY_PATTERN[CUR_LEVEL][1] * ENEMY_PATTERN[CUR_LEVEL][0]
-var ENEMY_SIZE = 100 * 8 / (ENEMY_PATTERN[CUR_LEVEL][0] + 1);
+var ENEMY_SIZE = Math.min(100, 100 * 8 / (ENEMY_PATTERN[CUR_LEVEL][0] + 1));
 
 var KEYS = {
+  enter   : 13,
   left    : 37,
   right   : 39,
-  spacebar: 32
+  spacebar: 32,
+  r		  : 82
 }
 
 ////  Functional Code  ////
@@ -118,15 +123,23 @@ $(document).ready( function() {
 
 function keydownRouter(e) {
   switch (e.which) {
+	case KEYS.r: {
+	  if (GAME_OVER) {
+        restartGame();
+      }
+	  break;
+	}
+	case KEYS.enter: {
+	  if (GAME_COMPLETE) {
+		  continueGame();
+	  }
+	  break;
+	}
     case KEYS.spacebar: {
   	  KEYARRAY[0] = true;
 	  if (SNOWBALL_TIMER > SNOWBALL_RECHARGE) {
   			fireSnowball();
   		}
-      console.log("spacebar pressed");
-      if (GAME_OVER) {
-        restartGame();
-      }
       break;
 	  }
     case KEYS.left: {
@@ -170,7 +183,6 @@ function keydownRouter(e) {
 		break;
 	}
 	default: {
-		console.log(KEYARRAY.join(' '));
 	}
   }
   e.Handled = true;
@@ -213,13 +225,21 @@ function setupIntervals() {
   // Move enemies
   let mv_en_id = setInterval ( function() {
     moveEnemies();
-    if (NUM_ENEMIES === 0) {
+    if (NUM_ENEMIES === 0 && GAME_COMPLETE === false) {
       clearInterval(cr_prj_id);
       newLevel();
     }
-
-    if (GAME_OVER) {
-      GAME_PAUSED = true;
+	if (GAME_COMPLETE) {
+	  // Remove all game elements
+      $('.snowball').remove();
+      $('.projectile').remove();
+      $('.enemy').remove();
+	  clearInterval(cr_prj_id);
+      // Hide primary windows
+      gwhGame.hide();
+	  $('#winner').show();
+	}
+    else if (GAME_OVER) {
       // Remove all game elements
       $('.snowball').remove();
       $('.projectile').remove();
@@ -234,17 +254,19 @@ function setupIntervals() {
   }, 100);
 }
 
-// Restarts the game when user presses the spacebar
+// Restarts the game when user presses the r button
 function restartGame() {
   GAME_OVER = false;
-  GAME_PAUSED = true;
+  GAME_COMPLETE = false;
+  GAME_CONTINUE = false;
+  NUM_ENEMIES = -1;  
   CUR_LEVEL = 0;
   LEVEL_OBJ.level = 1;
   SCORE_OBJ.score = 0;
   SNOWBALL_RECHARGE = 400;
   SNOWBALL_SIZE		= 20;
   console.log("restarting...");
-
+  $('#winner').hide();
   gwhOver.hide();
   $('.snowball').remove();
   $('.projectile').remove();
@@ -263,7 +285,7 @@ function restartGame() {
     threshold = Math.ceil(ENEMY_DOUBLE_RATIO * ENEMY_PATTERN[CUR_LEVEL][0] * ENEMY_PATTERN[CUR_LEVEL][1]);
   	NUM_ENEMIES = ENEMY_PATTERN[CUR_LEVEL][1] * ENEMY_PATTERN[CUR_LEVEL][0];
   	maxEnemyPosX += ENEMY_SIZE;
-  	ENEMY_SIZE = 100 * 8 / (ENEMY_PATTERN[CUR_LEVEL][0] + 1);
+  	ENEMY_SIZE = Math.min(100, 100 * 8 / (ENEMY_PATTERN[CUR_LEVEL][0] + 1));
   	maxEnemyPosX -= ENEMY_SIZE;
     createEnemies(ENEMY_SIZE);
     createBunkers();
@@ -271,11 +293,17 @@ function restartGame() {
   }, 5000);
 }
 
+// continues game with randomly-generated levels
+function continueGame() {
+	GAME_COMPLETE = false;
+	GAME_OVER = false;
+	GAME_CONTINUE = true;
+	$('#winner').hide();
+}
+
 // opens the game store
 function openStore() {
-  console.log("opening store");
   IN_STORE = true;
-  GAME_PAUSED = true;
   $('#levelScreen').hide();
   gwhStore.show();
 }
@@ -377,7 +405,6 @@ function checkCollisions() {
 
         // For each projectile and bunker, check for collisions
         if (isColliding($curBunker, $curProjectile, 10)) {
-          console.log($curBunker.children('img').attr('src'));
           // If a projectile and bunker collide, take a layer off the bunker
           switch ($curBunker.children('img').attr('src')) {
             case 'img/gift.png': {
@@ -416,6 +443,7 @@ function checkCollisions() {
       var $curEnemy = $(this);
       if (isColliding($curEnemy, snowman, 0)) {
         GAME_OVER = true;
+		GAME_PAUSED = true;
       }
     });
 
@@ -424,6 +452,7 @@ function checkCollisions() {
       var $curProjectile = $(this);
       if (isColliding($curProjectile, snowman, 0)) {
         GAME_OVER = true;
+		GAME_PAUSED = true;
       }
     });
 
@@ -458,7 +487,6 @@ function isColliding(o1, o2, offset) {
 
 // Handles enemy creation
 function createEnemies(ENEMY_SIZE) {
-	console.log('Spawning enemies...');
 	var enemyOffset = 1.1*ENEMY_SIZE;
 	var i;
 	for (i = 0; i < ENEMY_PATTERN[CUR_LEVEL][0]; i++) {
@@ -480,7 +508,6 @@ function createEnemies(ENEMY_SIZE) {
 }
 
 function createBunkers() {
-  console.log('Creating bunkers...');
   var bunkerSpacing = Math.floor((900 - (NUM_BUNKERS[CUR_LEVEL] * BUNKERSIZE)) / ((NUM_BUNKERS[CUR_LEVEL] + 1)));
   var i;
   for (i = 0; i < NUM_BUNKERS[CUR_LEVEL]; i++) {
@@ -512,6 +539,7 @@ function moveEnemies() {
             $curEnemy.css('top', parseInt($curEnemy.css('top')) + (ENEMY_SIZE  * ENEMY_DESCENT_SPEED[CUR_LEVEL]));
             if (parseInt($curEnemy.css('top')) > 450) {
               GAME_OVER = true;
+			  GAME_PAUSED = true;
             }
           });
           return false;
@@ -534,6 +562,7 @@ function moveEnemies() {
             $curEnemy.css('top', parseInt($curEnemy.css('top')) + (ENEMY_SIZE * ENEMY_DESCENT_SPEED[CUR_LEVEL]));
             if (parseInt($curEnemy.css('top')) > 450) {
               GAME_OVER = true;
+			  GAME_PAUSED = true;
             }
           });
           return false;
@@ -548,7 +577,6 @@ function moveEnemies() {
     }
     if (NUM_ENEMIES < threshold) {
       ENEMY_SPEED = ENEMY_SPEED*2;
-      console.log(ENEMY_SPEED);
       threshold = Math.ceil(threshold*ENEMY_DOUBLE_RATIO);
     }
   }
@@ -556,7 +584,6 @@ function moveEnemies() {
 
 // Handle projectile creation events
 function createProjectile() {
-  console.log('Spawning projectile...');
 
   if (!GAME_PAUSED){
 
@@ -610,7 +637,6 @@ function createProjectile() {
 // Handle "fire" [snowball] events
 function fireSnowball() {
   if(!GAME_PAUSED){
-    console.log('Firing snowball...');
 
     var snowballDivStr = "<div id='r-" + snowballIdx + "' class='snowball'><img src='img/snowball.png'/></div>";
     // Add the snowball to the screen
@@ -659,35 +685,71 @@ function moveSnowman(arrow) {
 }
 
 function newLevel(){
+  GAME_PAUSED = true;
+  console.log("proceeding to next level");
   $('.snowball').remove();
   $('.projectile').remove();
   $('.bunker').remove();
-  $('#store').show();
-  LEVEL_OBJ.level += 1
-  $('#levelScreen').show();
-  gwhGame.hide();
-  CUR_LEVEL++;
-  ENEMY_SPEED = LEVEL_SPEED[CUR_LEVEL];
-  GAME_PAUSED = true;
-  threshold = Math.ceil(ENEMY_DOUBLE_RATIO * ENEMY_PATTERN[CUR_LEVEL][0] * ENEMY_PATTERN[CUR_LEVEL][1]);
+  CUR_LEVEL++
+  if (GAME_CONTINUE) {
+	LEVEL_OBJ.level += 1
+    $('#store').show();
+    $('#levelScreen').show();
+	gwhGame.hide();
+    ENEMY_SPEED = Math.random()*5 + 0.5; // mess around for max speed
+	console.log(ENEMY_SPEED);
+	ENEMY_DESCENT_SPEED[CUR_LEVEL] = Math.random()*0.65 + 0.1 // mess around for max speed
+	ENEMY_PATTERN[CUR_LEVEL] = [Math.floor(Math.random()*17.5) + 3,Math.floor(Math.random()*2.99) + 1];// // mess around for min/max
+    PROJECTILE_SPAWN_RATE[CUR_LEVEL] = Math.random()*1500 + 500;
+	threshold = Math.ceil(ENEMY_DOUBLE_RATIO * ENEMY_PATTERN[CUR_LEVEL][0] * ENEMY_PATTERN[CUR_LEVEL][1]);
 	NUM_ENEMIES = ENEMY_PATTERN[CUR_LEVEL][1] * ENEMY_PATTERN[CUR_LEVEL][0];
 	maxEnemyPosX += ENEMY_SIZE;
-	ENEMY_SIZE = 100 * 8 / (ENEMY_PATTERN[CUR_LEVEL][0] + 1);
+	ENEMY_SIZE = Math.min(100, 100 * 8 / (ENEMY_PATTERN[CUR_LEVEL][0] + 1));
 	maxEnemyPosX -= ENEMY_SIZE;
-  // check if store is opened
-  console.log("in store!");
-  setTimeout(function() {
-    if (!IN_STORE) {
-	  createEnemies(ENEMY_SIZE);
-      createBunkers();
-	  cr_prj_id = setInterval(function() {
-        createProjectile();
-      }, PROJECTILE_SPAWN_RATE[CUR_LEVEL]);
-      $('#levelScreen').hide();
-      gwhGame.show();
-      GAME_PAUSED = false;
-    }
-  }, 5000)
+	NUM_BUNKERS[CUR_LEVEL] = Math.floor(Math.random()*5.5);
+    // check if store is opened
+    setTimeout(function() {
+      if (!IN_STORE) {
+	    createEnemies(ENEMY_SIZE);
+        createBunkers();
+	    cr_prj_id = setInterval(function() {
+          createProjectile();
+        }, PROJECTILE_SPAWN_RATE[CUR_LEVEL]);
+        $('#levelScreen').hide();
+        gwhGame.show();
+        GAME_PAUSED = false;
+      }
+    }, 5000)
+  }
+  else if (CUR_LEVEL < NUM_LEVELS) {
+    LEVEL_OBJ.level += 1
+    $('#store').show();
+    $('#levelScreen').show();
+    gwhGame.hide();
+    ENEMY_SPEED = LEVEL_SPEED[CUR_LEVEL];
+    threshold = Math.ceil(ENEMY_DOUBLE_RATIO * ENEMY_PATTERN[CUR_LEVEL][0] * ENEMY_PATTERN[CUR_LEVEL][1]);
+	NUM_ENEMIES = ENEMY_PATTERN[CUR_LEVEL][1] * ENEMY_PATTERN[CUR_LEVEL][0];
+	maxEnemyPosX += ENEMY_SIZE;
+	ENEMY_SIZE = Math.min(100, 100 * 8 / (ENEMY_PATTERN[CUR_LEVEL][0] + 1));
+	maxEnemyPosX -= ENEMY_SIZE;
+    // check if store is opened
+    setTimeout(function() {
+      if (!IN_STORE) {
+	    createEnemies(ENEMY_SIZE);
+        createBunkers();
+	    cr_prj_id = setInterval(function() {
+          createProjectile();
+        }, PROJECTILE_SPAWN_RATE[CUR_LEVEL]);
+        $('#levelScreen').hide();
+        gwhGame.show();
+        GAME_PAUSED = false;
+      }
+    }, 5000)
+  }
+  else {
+	  GAME_COMPLETE = true;
+	  GAME_OVER = true;
+  }
 }
 
 
