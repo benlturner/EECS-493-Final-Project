@@ -90,7 +90,7 @@ $(document).ready( function() {
   snowman   = $('#enterprise');  // set the global snowman handle
   // Set global positions
   maxSnowmanPosX = gwhGame.width() - snowman.width();
-  maxSnowmanPosY = gwhGame.height() - 75;
+  maxSnowmanPosY = gwhGame.height() - 85;
 
   SNOWMAN_OBJ.snowmanStyle.top = maxSnowmanPosY;
   gwhGame.hide();
@@ -268,6 +268,7 @@ function restartGame() {
   SCORE_OBJ.score = 0;
   SNOWBALL_RECHARGE = 400;
   SNOWBALL_SIZE		= 20;
+  SNOWMAN_OBJ.snowmanStyle.lives = 1;
   console.log("restarting...");
   $('#winner').hide();
   gwhOver.hide();
@@ -457,8 +458,12 @@ function checkCollisions() {
     $('.projectile').each( function() {
       var $curProjectile = $(this);
       if (isColliding($curProjectile, snowman, 0)) {
-        GAME_OVER = true;
-		GAME_PAUSED = true;
+		SNOWMAN_OBJ.snowmanStyle.lives -=1;
+		$curProjectile.remove();
+		if (SNOWMAN_OBJ.snowmanStyle.lives === 0) {
+			GAME_OVER = true;
+			GAME_PAUSED = true;
+		}
       }
     });
 
@@ -803,12 +808,8 @@ function newLevel(){
 
 /* Things we need/want
 		N - design levels
-		N - after the total amount of pre-built levels, congratulate the player
-		W - after completion, switch back to procedurally generating levels with random level-specific
-			properties.
 		N - a shop
 			lives, cosmetics, double/triple shot, shots pierce through 1|2 enemies, shots go through bunkers, larger snowballs 1|2, quicker firing 1|2.
 				maybe permanently unlock upgrades, but players can only have 3 equiped at a time?
-		W - theme the game to UofM more? Maybe make the background more UofM, the snowman have UofM colors on its scarf etc.
 		N - comment everything, remove useless code, replace magic numbers with variables, shrink code using helper functions
 */
