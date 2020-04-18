@@ -46,6 +46,7 @@ var GAME_OVER = false;
 var GAME_COMPLETE = false;
 var GAME_CONTINUE = false;
 var IN_STORE = false;
+var PROJECTILES_FALLING = false;
 
 // Global Window Handles (gwh__)  --> replaced with Vue.js
 var gwhGame, gwhOver, gwhStatus, gwhObjectives, gwhControls;
@@ -54,17 +55,18 @@ var gwhGame, gwhOver, gwhStatus, gwhObjectives, gwhControls;
 var snowman;
 
 // Level Data
-var ENEMY_PATTERN = [[2,1]]; // Enemies Wide, Enemies Deep
-var PROJECTILE_SPAWN_RATE = [10200];  // ms
-var NUM_BUNKERS = [4];
-var LEVEL_SPEED = [2]; 							// Enemy Horizontal Speed
-var ENEMY_DESCENT_SPEED = [0.1]	// Enemy Vertical Speed
-const NUM_LEVELS = ENEMY_PATTERN.length;
+var ENEMY_PATTERN = [7,1]; // Enemies Wide, Enemies Deep
+var PROJECTILE_SPAWN_RATE = 1400;  // ms
+var NUM_BUNKERS = 4;
+var LEVEL_SPEED = 2; 							// Enemy Horizontal Speed
+var ENEMY_DESCENT_SPEED = .2;	// Enemy Vertical Speed
+const NUM_LEVELS = 7;
 
 // Current Level Vars
-var threshold = Math.ceil(ENEMY_DOUBLE_RATIO * ENEMY_PATTERN[CUR_LEVEL][0] * ENEMY_PATTERN[CUR_LEVEL][1]);
-var NUM_ENEMIES = ENEMY_PATTERN[CUR_LEVEL][1] * ENEMY_PATTERN[CUR_LEVEL][0]
-var ENEMY_SIZE = Math.min(100, 100 * 8 / (ENEMY_PATTERN[CUR_LEVEL][0] + 1));
+var threshold = Math.ceil(ENEMY_DOUBLE_RATIO * ENEMY_PATTERN[0] * ENEMY_PATTERN[1]);
+var NUM_ENEMIES = ENEMY_PATTERN[1] * ENEMY_PATTERN[0]
+var ENEMY_SIZE = Math.min(100, 100 * 8 / (ENEMY_PATTERN[0] + 1));
+
 
 var KEYS = {
   enter   : 13,
@@ -92,7 +94,7 @@ $(document).ready( function() {
   gwhStoreItems = $('.items');
   snowman   = $('#enterprise');  // set the global snowman handle
   // Set global positions
-  maxSnowmanPosX = gwhGame.width() - snowman.width();
+  maxSnowmanPosX = gwhGame.width() - 50;
   maxSnowmanPosY = gwhGame.height() - 70;
 
   SNOWMAN_OBJ.snowmanStyle.top = maxSnowmanPosY;
@@ -141,38 +143,44 @@ function setupIntervals() {
   maxEnemyPosX = gwhGame.width() - ENEMY_SIZE + 10;
   createEnemies(ENEMY_SIZE);
   createBunkers();
-  cr_prj_id = setInterval(function() {
-    createProjectile();
-  }, PROJECTILE_SPAWN_RATE[CUR_LEVEL]);
+  if (!PROJECTILES_FALLING) {
+    cr_prj_id = setInterval(function() {
+      createProjectile();
+    }, PROJECTILE_SPAWN_RATE);
+    PROJECTILES_FALLING = true;
+  }
   // Move enemies
   let mv_en_id = setInterval ( function() {
     moveEnemies();
     if (NUM_ENEMIES === 0 && GAME_COMPLETE === false) {
       clearInterval(cr_prj_id);
+      PROJECTILES_FALLING = false;
       newLevel();
     }
 	if (GAME_COMPLETE) {
 	  // Remove all game elements
-      $('.snowball').remove();
-      $('.projectile').remove();
-      $('.enemy').remove();
-	  clearInterval(cr_prj_id);
+    $('.snowball').remove();
+    $('.projectile').remove();
+    $('.enemy').remove();
+    clearInterval(cr_prj_id);
+    PROJECTILES_FALLING = false;
+    
       // Hide primary windows
       gwhGame.hide();
 	  $('#winner').show();
 	}
-    else if (GAME_OVER) {
-      // Remove all game elements
-      $('.snowball').remove();
-      $('.projectile').remove();
-      $('.enemy').remove();
-	  clearInterval(cr_prj_id);
-      // Hide primary windows
-      gwhGame.hide();
-
-      // Show "Game Over" screen
-      gwhOver.show();
-    }
+  else if (GAME_OVER) {
+    // Remove all game elements
+    $('.snowball').remove();
+    $('.projectile').remove();
+    $('.enemy').remove();
+    clearInterval(cr_prj_id);
+    PROJECTILES_FALLING = false;
+    // Hide primary windows
+    gwhGame.hide();
+    // Show "Game Over" screen
+    gwhOver.show();
+  }
   }, 100);
 }
 
@@ -180,15 +188,15 @@ function setupIntervals() {
 function createEnemies(ENEMY_SIZE) {
 	var enemyOffset = 1.1*ENEMY_SIZE;
 	var i;
-	for (i = 0; i < ENEMY_PATTERN[CUR_LEVEL][0]; i++) {
+	for (i = 0; i < ENEMY_PATTERN[0]; i++) {
 		var j;
-		for (j = 0; j < ENEMY_PATTERN[CUR_LEVEL][1]; j++) {
+		for (j = 0; j < ENEMY_PATTERN[1]; j++) {
 			var enemyDivStr = "<div id='e-" + enemyIdx + "' class='enemy'></div>"
 			gwhGame.append(enemyDivStr);
 			var $curEnemy = $('#e-'+enemyIdx);
 			$curEnemy.css('position',"absolute");
 			$curEnemy.css('left', (5 + (i * enemyOffset)) + "px");
-			$curEnemy.css('top', (5 + (j * enemyOffset)) + "px");
+			$curEnemy.css('top', (15 + (j * enemyOffset)) + "px");
 			$curEnemy.css('width', ENEMY_SIZE + "px");
 			$curEnemy.css('height', ENEMY_SIZE + "px");
 			$curEnemy.append("<img src='img/snowman.png' height ='" + ENEMY_SIZE + " width =" + ENEMY_SIZE + "'/>");
@@ -199,9 +207,9 @@ function createEnemies(ENEMY_SIZE) {
 }
 
 function createBunkers() {
-  var bunkerSpacing = Math.floor((900 - (NUM_BUNKERS[CUR_LEVEL] * BUNKERSIZE)) / ((NUM_BUNKERS[CUR_LEVEL] + 1)));
+  var bunkerSpacing = Math.floor((900 - (NUM_BUNKERS * BUNKERSIZE)) / ((NUM_BUNKERS + 1)));
   var i;
-  for (i = 0; i < NUM_BUNKERS[CUR_LEVEL]; i++) {
+  for (i = 0; i < NUM_BUNKERS; i++) {
     var bunkerDivStr = "<div id='b-" + bunkerIdx + "' class='bunker'></div>"
 		gwhGame.append(bunkerDivStr);
 		var $curBunker = $('#b-'+bunkerIdx);
@@ -329,7 +337,7 @@ function fireSnowball() {
     curSnowball.css('top', SNOWMAN_OBJ.snowmanStyle.top);
     var rxPos = SNOWMAN_OBJ.snowmanStyle.left + snowman.width()/4;  // In order to center the snowball, shift by half the div size (recall: origin [0,0] is top-left of div)
     curSnowball.css('left', rxPos+"px");
-	curSnowball.css('fontSize', SNOWBALL_DURABILITY * 10); 
+	  curSnowball.css('fontSize', SNOWBALL_DURABILITY * 10); 
     curSnowball.css('height', SNOWBALL_SIZE + "px");
     curSnowball.css('width', SNOWBALL_SIZE + "px");
     curImg.css('height', SNOWBALL_SIZE + "px");
@@ -354,7 +362,7 @@ function fireSnowball() {
 function fire_double_snowball() {
 	if(!GAME_PAUSED){
 
-	//make the first snowball
+	  //make the first snowball
     var snowballDivStr = "<div id='r-" + snowballIdx + "' class='snowball'><img src='img/snowball.png'/></div>";
     // Add the snowball to the screen
     gwhGame.append(snowballDivStr);
@@ -363,7 +371,7 @@ function fire_double_snowball() {
     let curImg = $('#r-'+snowballIdx + ' img');
     snowballIdx++;  // update the index to maintain uniqueness next time
 	
-	// make the second snowball
+	  // make the second snowball
     var snowballDivStr = "<div id='r-" + snowballIdx + "' class='snowball'><img src='img/snowball.png'/></div>";
     // Add the snowball to the screen
     gwhGame.append(snowballDivStr);
@@ -373,21 +381,21 @@ function fire_double_snowball() {
     snowballIdx++;  // update the index to maintain uniqueness next time
 	
     curSnowball.css('top', SNOWMAN_OBJ.snowmanStyle.top);
-	curSnowball2.css('top', SNOWMAN_OBJ.snowmanStyle.top);
+	  curSnowball2.css('top', SNOWMAN_OBJ.snowmanStyle.top);
     var rxPos = SNOWMAN_OBJ.snowmanStyle.left + snowman.width()/4 + SNOWBALL_SIZE/2;  
     var rxPos2 = SNOWMAN_OBJ.snowmanStyle.left + snowman.width()/4 - SNOWBALL_SIZE/2;  
-	curSnowball.css('left', rxPos+"px");
-	curSnowball2.css('left', rxPos2+"px");
-	curSnowball.css('fontSize', SNOWBALL_DURABILITY * 10); 
-	curSnowball2.css('fontSize', SNOWBALL_DURABILITY * 10); 
+	  curSnowball.css('left', rxPos+"px");
+	  curSnowball2.css('left', rxPos2+"px");
+	  curSnowball.css('fontSize', SNOWBALL_DURABILITY * 10); 
+	  curSnowball2.css('fontSize', SNOWBALL_DURABILITY * 10); 
     curSnowball.css('height', SNOWBALL_SIZE + "px");
-	curSnowball2.css('height', SNOWBALL_SIZE + "px");
+	  curSnowball2.css('height', SNOWBALL_SIZE + "px");
     curSnowball.css('width', SNOWBALL_SIZE + "px");
-	curSnowball2.css('width', SNOWBALL_SIZE + "px");
-	curImg.css('height', SNOWBALL_SIZE + "px");
-	curImg2.css('height', SNOWBALL_SIZE + "px");
+	  curSnowball2.css('width', SNOWBALL_SIZE + "px");
+	  curImg.css('height', SNOWBALL_SIZE + "px");
+	  curImg2.css('height', SNOWBALL_SIZE + "px");
     curImg.css('width', SNOWBALL_SIZE + "px");
-	curImg2.css('width', SNOWBALL_SIZE + "px");
+	  curImg2.css('width', SNOWBALL_SIZE + "px");
 
     // Create movement update handler
     setInterval( function() {
@@ -504,7 +512,7 @@ function moveSnowman(arrow) {
   if(!GAME_PAUSED){
     switch (arrow) {
       case KEYS.left:   // left arrow
-        SNOWMAN_OBJ.snowmanStyle.left = Math.max(5, SNOWMAN_OBJ.snowmanStyle.left - SNOWMAN_SPEED);
+        SNOWMAN_OBJ.snowmanStyle.left = Math.max(15, SNOWMAN_OBJ.snowmanStyle.left - SNOWMAN_SPEED);
       break;
       case KEYS.right:  // right arrow
         SNOWMAN_OBJ.snowmanStyle.left = Math.min(maxSnowmanPosX, SNOWMAN_OBJ.snowmanStyle.left + SNOWMAN_SPEED);
@@ -523,7 +531,7 @@ function moveEnemies() {
           ENEMY_DIRECTION = "right";
           $('.enemy').each( function() {
             var $curEnemy = $(this);
-            $curEnemy.css('top', parseInt($curEnemy.css('top')) + (ENEMY_SIZE  * ENEMY_DESCENT_SPEED[CUR_LEVEL]));
+            $curEnemy.css('top', parseInt($curEnemy.css('top')) + (ENEMY_SIZE  * ENEMY_DESCENT_SPEED));
             if (parseInt($curEnemy.css('top')) > 450) {
               GAME_OVER = true;
 			  GAME_PAUSED = true;
@@ -546,7 +554,7 @@ function moveEnemies() {
           ENEMY_DIRECTION = "left";
           $('.enemy').each( function() {
             var $curEnemy = $(this);
-            $curEnemy.css('top', parseInt($curEnemy.css('top')) + (ENEMY_SIZE * ENEMY_DESCENT_SPEED[CUR_LEVEL]));
+            $curEnemy.css('top', parseInt($curEnemy.css('top')) + (ENEMY_SIZE * ENEMY_DESCENT_SPEED));
             if (parseInt($curEnemy.css('top')) > 450) {
               GAME_OVER = true;
 			  GAME_PAUSED = true;
@@ -811,28 +819,31 @@ function newLevel(){
   $('.bunker').remove();
   CUR_LEVEL++
   if (GAME_CONTINUE) {
-	LEVEL_OBJ.level += 1
+	  LEVEL_OBJ.level += 1
     $('#store').show();
     $('#levelScreen').show();
-	gwhGame.hide();
+	  gwhGame.hide();
     ENEMY_SPEED = Math.random()*5 + 0.5;
-	ENEMY_DESCENT_SPEED[CUR_LEVEL] = Math.random()*0.4 + 0.1
-	ENEMY_PATTERN[CUR_LEVEL] = [Math.floor(Math.random()*17.5) + 3,Math.floor(Math.random()*2.99) + 1];
-    PROJECTILE_SPAWN_RATE[CUR_LEVEL] = Math.random()*1500 + 500;
-	threshold = Math.ceil(ENEMY_DOUBLE_RATIO * ENEMY_PATTERN[CUR_LEVEL][0] * ENEMY_PATTERN[CUR_LEVEL][1]);
-	NUM_ENEMIES = ENEMY_PATTERN[CUR_LEVEL][1] * ENEMY_PATTERN[CUR_LEVEL][0];
-	maxEnemyPosX += ENEMY_SIZE;
-	ENEMY_SIZE = Math.min(100, 100 * 8 / (ENEMY_PATTERN[CUR_LEVEL][0] + 1));
-	maxEnemyPosX -= ENEMY_SIZE;
-	NUM_BUNKERS[CUR_LEVEL] = Math.floor(Math.random()*5.5);
+  	ENEMY_DESCENT_SPEED = Math.random()*0.4 + 0.1
+	  ENEMY_PATTERN = [Math.floor(Math.random()*17.5) + 3,Math.floor(Math.random()*2.99) + 1];
+    PROJECTILE_SPAWN_RATE = Math.random()*1500 + 500;
+	  NUM_ENEMIES = ENEMY_PATTERN[1] * ENEMY_PATTERN[0];
+  	threshold = Math.ceil(ENEMY_DOUBLE_RATIO * NUM_ENEMIES);
+  	maxEnemyPosX += ENEMY_SIZE;
+	  ENEMY_SIZE = Math.min(100, 100 * 8 / (ENEMY_PATTERN[0] + 1));
+  	maxEnemyPosX -= ENEMY_SIZE;
+	  NUM_BUNKERS = Math.floor(Math.random()*5.5);
     // check if store is opened
     setTimeout(function() {
       if (!IN_STORE) {
-	    createEnemies(ENEMY_SIZE);
+	      createEnemies(ENEMY_SIZE);
         createBunkers();
-	    cr_prj_id = setInterval(function() {
-          createProjectile();
-        }, PROJECTILE_SPAWN_RATE[CUR_LEVEL]);
+	      if (!PROJECTILES_FALLING) {
+          cr_prj_id = setInterval(function() {
+            createProjectile();
+          }, PROJECTILE_SPAWN_RATE);
+          PROJECTILES_FALLING = true;
+        }
         $('#levelScreen').hide();
         gwhGame.show();
         GAME_PAUSED = false;
@@ -844,25 +855,34 @@ function newLevel(){
     $('#store').show();
     $('#levelScreen').show();
     gwhGame.hide();
-    ENEMY_SPEED = LEVEL_SPEED[CUR_LEVEL];
-    threshold = Math.ceil(ENEMY_DOUBLE_RATIO * ENEMY_PATTERN[CUR_LEVEL][0] * ENEMY_PATTERN[CUR_LEVEL][1]);
-	NUM_ENEMIES = ENEMY_PATTERN[CUR_LEVEL][1] * ENEMY_PATTERN[CUR_LEVEL][0];
-	maxEnemyPosX += ENEMY_SIZE;
-	ENEMY_SIZE = Math.min(100, 100 * 8 / (ENEMY_PATTERN[CUR_LEVEL][0] + 1));
-	maxEnemyPosX -= ENEMY_SIZE;
+    LEVEL_SPEED += (0.7 * (7 / ENEMY_PATTERN[0]));
+    ENEMY_SPEED = LEVEL_SPEED;
+    PROJECTILE_SPAWN_RATE -= 25;
+    if (CUR_LEVEL == 3) {
+      NUM_BUNKERS = 3;
+    }
+    ENEMY_PATTERN[0]++;
+    maxEnemyPosX += ENEMY_SIZE;
+	  ENEMY_SIZE = Math.min(100, 100 * 8 / (ENEMY_PATTERN[0] + 1));
+	  maxEnemyPosX -= ENEMY_SIZE;
+	  NUM_ENEMIES = ENEMY_PATTERN[1] * ENEMY_PATTERN[0];
+    threshold = Math.ceil(ENEMY_DOUBLE_RATIO * NUM_ENEMIES);
     // check if store is opened
     setTimeout(function() {
       if (!IN_STORE) {
-	    createEnemies(ENEMY_SIZE);
+	      createEnemies(ENEMY_SIZE);
         createBunkers();
-	    cr_prj_id = setInterval(function() {
-          createProjectile();
-        }, PROJECTILE_SPAWN_RATE[CUR_LEVEL]);
+	      if (!PROJECTILES_FALLING) {
+          cr_prj_id = setInterval(function() {
+            createProjectile();
+          }, PROJECTILE_SPAWN_RATE);
+          PROJECTILES_FALLING = true;
+        }
         $('#levelScreen').hide();
         gwhGame.show();
         GAME_PAUSED = false;
       }
-    }, 5000)
+    }, 7000)
   }
   else {
 	  GAME_COMPLETE = true;
@@ -880,7 +900,6 @@ function openStore() {
 
 // closes the game store
 function closeStore() {
-  console.log("closing");
   $('#store').hide();
   IN_STORE = false;
   // go back to level page
@@ -889,9 +908,12 @@ function closeStore() {
   $('#levelScreen').show();
   createEnemies(ENEMY_SIZE);
   createBunkers();
-  cr_prj_id = setInterval(function() {
-        createProjectile();
-      }, PROJECTILE_SPAWN_RATE[CUR_LEVEL]);
+  if (!PROJECTILES_FALLING) {
+    cr_prj_id = setInterval(function() {
+      createProjectile();
+    }, PROJECTILE_SPAWN_RATE);
+    PROJECTILES_FALLING = true;
+  }
   setTimeout(function() {
     $('#levelScreen').hide();
     gwhGame.show();
@@ -927,17 +949,24 @@ function restartGame() {
   $('#levelScreen').show();
 
   setTimeout(function() {
-	cr_prj_id = setInterval(function() {
+	  if (!PROJECTILES_FALLING) {
+      cr_prj_id = setInterval(function() {
         createProjectile();
-      }, PROJECTILE_SPAWN_RATE[CUR_LEVEL]);
+      }, PROJECTILE_SPAWN_RATE);
+      PROJECTILES_FALLING = true;
+    }
     gwhGame.show();
     $('#levelScreen').hide();
-	  ENEMY_DIRECTION = "right";
-    ENEMY_SPEED = LEVEL_SPEED[CUR_LEVEL];
-    threshold = Math.ceil(ENEMY_DOUBLE_RATIO * ENEMY_PATTERN[CUR_LEVEL][0] * ENEMY_PATTERN[CUR_LEVEL][1]);
-  	NUM_ENEMIES = ENEMY_PATTERN[CUR_LEVEL][1] * ENEMY_PATTERN[CUR_LEVEL][0];
+    ENEMY_DIRECTION = "right";
+    PROJECTILE_SPAWN_RATE = 1400;
+    NUM_BUNKERS = 4;
+    ENEMY_SPEED = 2;
+    ENEMY_PATTERN[0] = 7
+    ENEMY_PATTERN[1] = 1
+  	NUM_ENEMIES = ENEMY_PATTERN[1] * ENEMY_PATTERN[0];
+    threshold = Math.ceil(ENEMY_DOUBLE_RATIO * NUM_ENEMIES);
   	maxEnemyPosX += ENEMY_SIZE;
-  	ENEMY_SIZE = Math.min(100, 100 * 8 / (ENEMY_PATTERN[CUR_LEVEL][0] + 1));
+  	ENEMY_SIZE = Math.min(100, 100 * 8 / (ENEMY_PATTERN[0] + 1));
   	maxEnemyPosX -= ENEMY_SIZE;
     createEnemies(ENEMY_SIZE);
     createBunkers();
