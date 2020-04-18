@@ -126,21 +126,95 @@ $(document).ready( function() {
   }, 5000);
 });
 
-function fire() {
-	switch (NUM_SNOWBALLS) {
-				case 1: {
-					fireSnowball();
-					break;
-				}
-				case 2: {
-					fire_double_snowball();
-					break;
-				}
-				case 3: {
-					fire_triple_snowball();
-					break;
-				}
-			}
+// set up all the intervals and the game
+function setupIntervals() {
+  // Periodically check for collisions (instead of checking every position-update)
+  let ch_co_id = setInterval( function() {
+    checkCollisions();  // Remove elements if there are collisions
+  }, 100);
+
+  // Update Snowball reload
+  let rl_sb_id = setInterval (function() {
+    SNOWBALL_TIMER = SNOWBALL_TIMER + 100;
+  },100);
+  // Create enemies
+  maxEnemyPosX = gwhGame.width() - ENEMY_SIZE + 10;
+  createEnemies(ENEMY_SIZE);
+  createBunkers();
+  cr_prj_id = setInterval(function() {
+    createProjectile();
+  }, PROJECTILE_SPAWN_RATE[CUR_LEVEL]);
+  // Move enemies
+  let mv_en_id = setInterval ( function() {
+    moveEnemies();
+    if (NUM_ENEMIES === 0 && GAME_COMPLETE === false) {
+      clearInterval(cr_prj_id);
+      newLevel();
+    }
+	if (GAME_COMPLETE) {
+	  // Remove all game elements
+      $('.snowball').remove();
+      $('.projectile').remove();
+      $('.enemy').remove();
+	  clearInterval(cr_prj_id);
+      // Hide primary windows
+      gwhGame.hide();
+	  $('#winner').show();
+	}
+    else if (GAME_OVER) {
+      // Remove all game elements
+      $('.snowball').remove();
+      $('.projectile').remove();
+      $('.enemy').remove();
+	  clearInterval(cr_prj_id);
+      // Hide primary windows
+      gwhGame.hide();
+
+      // Show "Game Over" screen
+      gwhOver.show();
+    }
+  }, 100);
+}
+
+// Handles enemy creation
+function createEnemies(ENEMY_SIZE) {
+	var enemyOffset = 1.1*ENEMY_SIZE;
+	var i;
+	for (i = 0; i < ENEMY_PATTERN[CUR_LEVEL][0]; i++) {
+		var j;
+		for (j = 0; j < ENEMY_PATTERN[CUR_LEVEL][1]; j++) {
+			var enemyDivStr = "<div id='e-" + enemyIdx + "' class='enemy'></div>"
+			gwhGame.append(enemyDivStr);
+			var $curEnemy = $('#e-'+enemyIdx);
+			$curEnemy.css('position',"absolute");
+			$curEnemy.css('left', (5 + (i * enemyOffset)) + "px");
+			$curEnemy.css('top', (5 + (j * enemyOffset)) + "px");
+			$curEnemy.css('width', ENEMY_SIZE + "px");
+			$curEnemy.css('height', ENEMY_SIZE + "px");
+			$curEnemy.append("<img src='img/snowman.png' height ='" + ENEMY_SIZE + " width =" + ENEMY_SIZE + "'/>");
+			$curEnemy.children('img').attr('position', 'absolute');
+			enemyIdx++;
+		}
+	}
+}
+
+function createBunkers() {
+  var bunkerSpacing = Math.floor((900 - (NUM_BUNKERS[CUR_LEVEL] * BUNKERSIZE)) / ((NUM_BUNKERS[CUR_LEVEL] + 1)));
+  var i;
+  for (i = 0; i < NUM_BUNKERS[CUR_LEVEL]; i++) {
+    var bunkerDivStr = "<div id='b-" + bunkerIdx + "' class='bunker'></div>"
+		gwhGame.append(bunkerDivStr);
+		var $curBunker = $('#b-'+bunkerIdx);
+		$curBunker.css('position',"absolute");
+		$curBunker.css('left', ((bunkerSpacing) + (i * (BUNKERSIZE + bunkerSpacing))) + "px");
+		$curBunker.css('top', ((parseInt(gwhGame.height()) - 200) + "px"));
+		$curBunker.css('width', "112 px");
+		$curBunker.css('height', "112 px");
+		$curBunker.append("<img src='img/gift.png' height = " + BUNKERSIZE + " px width = " + BUNKERSIZE + " px'/>");
+		$curBunker.children('img').attr('position', 'absolute');
+		bunkerIdx++;
+  }
+
 }
 
 function keydownRouter(e) {
@@ -223,129 +297,328 @@ function keyupRouter(e) {
 	}
 }
 
-// set up all the intervals and the game
-function setupIntervals() {
-  // Periodically check for collisions (instead of checking every position-update)
-  let ch_co_id = setInterval( function() {
-    checkCollisions();  // Remove elements if there are collisions
-  }, 100);
+function fire() {
+	switch (NUM_SNOWBALLS) {
+				case 1: {
+					fireSnowball();
+					break;
+				}
+				case 2: {
+					fire_double_snowball();
+					break;
+				}
+				case 3: {
+					fire_triple_snowball();
+					break;
+				}
+			}
+}
 
-  // Update Snowball reload
-  let rl_sb_id = setInterval (function() {
-    SNOWBALL_TIMER = SNOWBALL_TIMER + 100;
-  },100);
-  // Create enemies
-  maxEnemyPosX = gwhGame.width() - ENEMY_SIZE + 10;
-  createEnemies(ENEMY_SIZE);
-  createBunkers();
-  cr_prj_id = setInterval(function() {
-    createProjectile();
-  }, PROJECTILE_SPAWN_RATE[CUR_LEVEL]);
-  // Move enemies
-  let mv_en_id = setInterval ( function() {
-    moveEnemies();
-    if (NUM_ENEMIES === 0 && GAME_COMPLETE === false) {
-      clearInterval(cr_prj_id);
-      newLevel();
+// Handle "fire" [snowball] events
+function fireSnowball() {
+  if(!GAME_PAUSED){
+
+    var snowballDivStr = "<div id='r-" + snowballIdx + "' class='snowball'><img src='img/snowball.png'/></div>";
+    // Add the snowball to the screen
+    gwhGame.append(snowballDivStr);
+    // Create and snowball handle based on newest index
+    var curSnowball = $('#r-'+snowballIdx);
+    let curImg = $('#r-'+snowballIdx + ' img');
+    snowballIdx++;  // update the index to maintain uniqueness next time
+
+    curSnowball.css('top', SNOWMAN_OBJ.snowmanStyle.top);
+    var rxPos = SNOWMAN_OBJ.snowmanStyle.left + snowman.width()/4;  // In order to center the snowball, shift by half the div size (recall: origin [0,0] is top-left of div)
+    curSnowball.css('left', rxPos+"px");
+	curSnowball.css('fontSize', SNOWBALL_DURABILITY * 10); 
+    curSnowball.css('height', SNOWBALL_SIZE + "px");
+    curSnowball.css('width', SNOWBALL_SIZE + "px");
+    curImg.css('height', SNOWBALL_SIZE + "px");
+    curImg.css('width', SNOWBALL_SIZE + "px");
+
+
+    // Create movement update handler
+    setInterval( function() {
+      curSnowball.css('top', parseInt(curSnowball.css('top'))-SNOWBALL_SPEED);
+      // Check to see if the snowball has left the game/viewing window
+      if (parseInt(curSnowball.css('top')) < 0) {
+        //curSnowball.hide();
+        curSnowball.remove();
+      }
+    }, OBJECT_REFRESH_RATE);
+    SNOWBALL_TIMER = 0;
+
+  }
+
+}
+
+function fire_double_snowball() {
+	if(!GAME_PAUSED){
+
+	//make the first snowball
+    var snowballDivStr = "<div id='r-" + snowballIdx + "' class='snowball'><img src='img/snowball.png'/></div>";
+    // Add the snowball to the screen
+    gwhGame.append(snowballDivStr);
+    // Create and snowball handle based on newest index
+    var curSnowball = $('#r-'+snowballIdx);
+    let curImg = $('#r-'+snowballIdx + ' img');
+    snowballIdx++;  // update the index to maintain uniqueness next time
+	
+	// make the second snowball
+    var snowballDivStr = "<div id='r-" + snowballIdx + "' class='snowball'><img src='img/snowball.png'/></div>";
+    // Add the snowball to the screen
+    gwhGame.append(snowballDivStr);
+    // Create and snowball handle based on newest index
+    var curSnowball2 = $('#r-'+snowballIdx);
+    let curImg2 = $('#r-'+snowballIdx + ' img');
+    snowballIdx++;  // update the index to maintain uniqueness next time
+	
+    curSnowball.css('top', SNOWMAN_OBJ.snowmanStyle.top);
+	curSnowball2.css('top', SNOWMAN_OBJ.snowmanStyle.top);
+    var rxPos = SNOWMAN_OBJ.snowmanStyle.left + snowman.width()/4 + SNOWBALL_SIZE/2;  
+    var rxPos2 = SNOWMAN_OBJ.snowmanStyle.left + snowman.width()/4 - SNOWBALL_SIZE/2;  
+	curSnowball.css('left', rxPos+"px");
+	curSnowball2.css('left', rxPos2+"px");
+	curSnowball.css('fontSize', SNOWBALL_DURABILITY * 10); 
+	curSnowball2.css('fontSize', SNOWBALL_DURABILITY * 10); 
+    curSnowball.css('height', SNOWBALL_SIZE + "px");
+	curSnowball2.css('height', SNOWBALL_SIZE + "px");
+    curSnowball.css('width', SNOWBALL_SIZE + "px");
+	curSnowball2.css('width', SNOWBALL_SIZE + "px");
+	curImg.css('height', SNOWBALL_SIZE + "px");
+	curImg2.css('height', SNOWBALL_SIZE + "px");
+    curImg.css('width', SNOWBALL_SIZE + "px");
+	curImg2.css('width', SNOWBALL_SIZE + "px");
+
+    // Create movement update handler
+    setInterval( function() {
+      curSnowball.css('top', parseInt(curSnowball.css('top'))-SNOWBALL_SPEED);
+      // Check to see if the snowball has left the game/viewing window
+      if (parseInt(curSnowball.css('top')) < 0) {
+        //curSnowball.hide();
+        curSnowball.remove();
+      }
+    }, OBJECT_REFRESH_RATE);
+	setInterval( function() {
+      curSnowball2.css('top', parseInt(curSnowball2.css('top'))-SNOWBALL_SPEED);
+      // Check to see if the snowball has left the game/viewing window
+      if (parseInt(curSnowball2.css('top')) < 0) {
+        //curSnowball.hide();
+        curSnowball.remove();
+      }
+    }, OBJECT_REFRESH_RATE);
+    SNOWBALL_TIMER = 0;
+
+  }
+}
+
+function fire_triple_snowball() {
+	if(!GAME_PAUSED){
+
+	//make the first snowball
+    var snowballDivStr = "<div id='r-" + snowballIdx + "' class='snowball'><img src='img/snowball.png'/></div>";
+    // Add the snowball to the screen
+    gwhGame.append(snowballDivStr);
+    // Create and snowball handle based on newest index
+    var curSnowball = $('#r-'+snowballIdx);
+    let curImg = $('#r-'+snowballIdx + ' img');
+    snowballIdx++;  // update the index to maintain uniqueness next time
+	
+	// make the second snowball
+    snowballDivStr = "<div id='r-" + snowballIdx + "' class='snowball'><img src='img/snowball.png'/></div>";
+    // Add the snowball to the screen
+    gwhGame.append(snowballDivStr);
+    // Create and snowball handle based on newest index
+    var curSnowball2 = $('#r-'+snowballIdx);
+    let curImg2 = $('#r-'+snowballIdx + ' img');
+    snowballIdx++;  // update the index to maintain uniqueness next time
+	
+	// make the third snowball
+    snowballDivStr = "<div id='r-" + snowballIdx + "' class='snowball'><img src='img/snowball.png'/></div>";
+    // Add the snowball to the screen
+    gwhGame.append(snowballDivStr);
+    // Create and snowball handle based on newest index
+    var curSnowball3 = $('#r-'+snowballIdx);
+    let curImg3 = $('#r-'+snowballIdx + ' img');
+    snowballIdx++;  // update the index to maintain uniqueness next time
+	
+    curSnowball.css('top', SNOWMAN_OBJ.snowmanStyle.top);
+	curSnowball2.css('top', SNOWMAN_OBJ.snowmanStyle.top);
+	curSnowball3.css('top', SNOWMAN_OBJ.snowmanStyle.top);
+    var rxPos = SNOWMAN_OBJ.snowmanStyle.left + snowman.width()/4 + SNOWBALL_SIZE;  
+    var rxPos2 = SNOWMAN_OBJ.snowmanStyle.left + snowman.width()/4 - SNOWBALL_SIZE/2;
+	var rxPos3 = SNOWMAN_OBJ.snowmanStyle.left + snowman.width()/4 + SNOWBALL_SIZE/4;	
+	curSnowball.css('left', rxPos+"px");
+	curSnowball2.css('left', rxPos2+"px");
+	curSnowball3.css('left', rxPos3+"px");
+	curSnowball.css('fontSize', SNOWBALL_DURABILITY * 10);
+	curSnowball2.css('fontSize', SNOWBALL_DURABILITY * 10);
+	curSnowball3.css('fontSize', SNOWBALL_DURABILITY * 10);
+    curSnowball.css('height', SNOWBALL_SIZE + "px");
+	curSnowball2.css('height', SNOWBALL_SIZE + "px");
+	curSnowball3.css('height', SNOWBALL_SIZE + "px");
+    curSnowball.css('width', SNOWBALL_SIZE + "px");
+	curSnowball2.css('width', SNOWBALL_SIZE + "px");
+	curSnowball3.css('width', SNOWBALL_SIZE + "px");
+    curImg.css('height', SNOWBALL_SIZE + "px");
+	curImg2.css('height', SNOWBALL_SIZE + "px");
+	curImg3.css('height', SNOWBALL_SIZE + "px");
+    curImg.css('width', SNOWBALL_SIZE + "px");
+	curImg2.css('width', SNOWBALL_SIZE + "px");
+	curImg3.css('width', SNOWBALL_SIZE + "px");
+
+    // Create movement update handler
+    setInterval( function() {
+      curSnowball.css('top', parseInt(curSnowball.css('top'))-SNOWBALL_SPEED);
+	  if (parseInt(curSnowball.css('left')) + SNOWBALL_SIZE < 900) {
+		curSnowball.css('left', parseInt(curSnowball.css('left'))+SNOWBALL_SPEED/8);
+      }
+      // Check to see if the snowball has left the game/viewing window
+      if (parseInt(curSnowball.css('top')) < 0) {
+        curSnowball.remove();
+      }
+	  
+    }, OBJECT_REFRESH_RATE);
+	setInterval( function() {
+      curSnowball2.css('top', parseInt(curSnowball2.css('top'))-SNOWBALL_SPEED);
+	  curSnowball2.css('left', parseInt(curSnowball2.css('left')) - SNOWBALL_SPEED/16);
+      // Check to see if the snowball has left the game/viewing window
+      if (parseInt(curSnowball2.css('top')) < 0) {
+        //curSnowball.hide();
+        curSnowball.remove();
+      }
+    }, OBJECT_REFRESH_RATE);
+    SNOWBALL_TIMER = 0;
+    setInterval( function() {
+      curSnowball3.css('top', parseInt(curSnowball3.css('top'))-SNOWBALL_SPEED);
+      // Check to see if the snowball has left the game/viewing window
+      if (parseInt(curSnowball3.css('top')) < 0) {
+        //curSnowball.hide();
+        curSnowball.remove();
+      }
+    }, OBJECT_REFRESH_RATE);
+  }
+}
+
+// Handle snowman movement events
+function moveSnowman(arrow) {
+  if(!GAME_PAUSED){
+    switch (arrow) {
+      case KEYS.left:   // left arrow
+        SNOWMAN_OBJ.snowmanStyle.left = Math.max(5, SNOWMAN_OBJ.snowmanStyle.left - SNOWMAN_SPEED);
+      break;
+      case KEYS.right:  // right arrow
+        SNOWMAN_OBJ.snowmanStyle.left = Math.min(maxSnowmanPosX, SNOWMAN_OBJ.snowmanStyle.left + SNOWMAN_SPEED);
+      break;
     }
-	if (GAME_COMPLETE) {
-	  // Remove all game elements
-      $('.snowball').remove();
-      $('.projectile').remove();
-      $('.enemy').remove();
-	  clearInterval(cr_prj_id);
-      // Hide primary windows
-      gwhGame.hide();
-	  $('#winner').show();
-	}
-    else if (GAME_OVER) {
-      // Remove all game elements
-      $('.snowball').remove();
-      $('.projectile').remove();
-      $('.enemy').remove();
-	  clearInterval(cr_prj_id);
-      // Hide primary windows
-      gwhGame.hide();
+  }
+}
 
-      // Show "Game Over" screen
-      gwhOver.show();
+//Handles enemy movement
+function moveEnemies() {
+  if(!GAME_PAUSED){
+    if (ENEMY_DIRECTION === "left") {
+      $('.enemy').each( function() {
+        var $curEnemy = $(this);
+        if ((parseInt($curEnemy.css('left')) - ENEMY_SPEED) < 5) {
+          ENEMY_DIRECTION = "right";
+          $('.enemy').each( function() {
+            var $curEnemy = $(this);
+            $curEnemy.css('top', parseInt($curEnemy.css('top')) + (ENEMY_SIZE  * ENEMY_DESCENT_SPEED[CUR_LEVEL]));
+            if (parseInt($curEnemy.css('top')) > 450) {
+              GAME_OVER = true;
+			  GAME_PAUSED = true;
+            }
+          });
+          return false;
+        }
+      });
+      if (ENEMY_DIRECTION === "left") {
+        $('.enemy').each( function() {
+        var $curEnemy = $(this);
+        $curEnemy.css('left', parseInt($curEnemy.css('left')) - ENEMY_SPEED)
+        });
+      }
     }
-  }, 100);
+    else {
+      $('.enemy').each( function() {
+        var $curEnemy = $(this);
+        if ((parseInt($curEnemy.css('left')) + ENEMY_SPEED) > maxEnemyPosX) {
+          ENEMY_DIRECTION = "left";
+          $('.enemy').each( function() {
+            var $curEnemy = $(this);
+            $curEnemy.css('top', parseInt($curEnemy.css('top')) + (ENEMY_SIZE * ENEMY_DESCENT_SPEED[CUR_LEVEL]));
+            if (parseInt($curEnemy.css('top')) > 450) {
+              GAME_OVER = true;
+			  GAME_PAUSED = true;
+            }
+          });
+          return false;
+        }
+      });
+      if (ENEMY_DIRECTION === "right") {
+        $('.enemy').each( function() {
+        var $curEnemy = $(this);
+        $curEnemy.css('left', parseInt($curEnemy.css('left')) + ENEMY_SPEED)
+        });
+      }
+    }
+    if (NUM_ENEMIES < threshold) {
+      ENEMY_SPEED = ENEMY_SPEED*2;
+      threshold = Math.ceil(threshold*ENEMY_DOUBLE_RATIO);
+    }
+  }
 }
 
-// Restarts the game when user presses the r button
-function restartGame() {
-  GAME_OVER = false;
-  GAME_COMPLETE = false;
-  GAME_CONTINUE = false;
-  NUM_ENEMIES = -1;  
-  CUR_LEVEL = 0;
-  LEVEL_OBJ.level = 1;
-  SCORE_OBJ.score = 0;
-  console.log("restarting...");
-  reset_store();
-  $('#winner').hide();
-  gwhOver.hide();
-  $('.snowball').remove();
-  $('.projectile').remove();
-  $('.bunker').remove();
-  $('#store').hide();
-  $('#levelScreen').show();
+// Handle projectile creation events
+function createProjectile() {
 
-  setTimeout(function() {
-	cr_prj_id = setInterval(function() {
-        createProjectile();
-      }, PROJECTILE_SPAWN_RATE[CUR_LEVEL]);
-    gwhGame.show();
-    $('#levelScreen').hide();
-	  ENEMY_DIRECTION = "right";
-    ENEMY_SPEED = LEVEL_SPEED[CUR_LEVEL];
-    threshold = Math.ceil(ENEMY_DOUBLE_RATIO * ENEMY_PATTERN[CUR_LEVEL][0] * ENEMY_PATTERN[CUR_LEVEL][1]);
-  	NUM_ENEMIES = ENEMY_PATTERN[CUR_LEVEL][1] * ENEMY_PATTERN[CUR_LEVEL][0];
-  	maxEnemyPosX += ENEMY_SIZE;
-  	ENEMY_SIZE = Math.min(100, 100 * 8 / (ENEMY_PATTERN[CUR_LEVEL][0] + 1));
-  	maxEnemyPosX -= ENEMY_SIZE;
-    createEnemies(ENEMY_SIZE);
-    createBunkers();
-    GAME_PAUSED = false;
-  }, 5000);
-}
+  if (!GAME_PAUSED){
 
-// continues game with randomly-generated levels
-function continueGame() {
-	GAME_COMPLETE = false;
-	GAME_OVER = false;
-	GAME_CONTINUE = true;
-	$('#winner').hide();
-}
+    var projectileDivStr = "<div id='a-" + projectileIdx + "' class='projectile'></div>"
+    // Add the snowball to the screen
+    gwhGame.append(projectileDivStr);
+    // Create and projectile handle based on newest index
+    var $curProjectile = $('#a-'+projectileIdx);
 
-// opens the game store
-function openStore() {
-  IN_STORE = true;
-  $('#levelScreen').hide();
-  gwhStore.show();
-  gwhStoreItems.show();
-}
+    projectileIdx++;  // update the index to maintain uniqueness next time
 
-// closes the game store
-function closeStore() {
-  console.log("closing");
-  $('#store').hide();
-  IN_STORE = false;
-  // go back to level page
-  gwhStore.hide();
-  gwhStoreItems.hide();
-  $('#levelScreen').show();
-  createEnemies(ENEMY_SIZE);
-  createBunkers();
-  cr_prj_id = setInterval(function() {
-        createProjectile();
-      }, PROJECTILE_SPAWN_RATE[CUR_LEVEL]);
-  setTimeout(function() {
-    $('#levelScreen').hide();
-    gwhGame.show();
-    GAME_PAUSED = false;
-  }, 5000)
+    var projectileEnemyID = Math.floor(Math.random() * NUM_ENEMIES);
+    $curProjectile.css('width', PROJECTILE_SIZE+"px");
+    $curProjectile.css('height', PROJECTILE_SIZE+"px");
+
+    if(Math.random() < 1/3){
+      $curProjectile.append("<img src='img/blueBook.png' height='" + PROJECTILE_SIZE + "'/>")
+    } else if(Math.random() < 2/3) {
+      $curProjectile.append("<img src='img/icicle.png' height='" + PROJECTILE_SIZE + "'/>")
+    } else {
+      $curProjectile.append("<img src='img/glasses.png' height='" + PROJECTILE_SIZE + "'/>")
+    }
+
+    var index = 0
+    let startingPositionLeft;
+    let startingPositionBottom;
+    $('.enemy').each( function() {
+      var $curEnemy = $(this);
+      if(index === projectileEnemyID){
+        startingPositionLeft = parseInt($curEnemy.css('left')) + parseInt($curEnemy.css('width'))/2.5
+        startingPositionBottom = parseInt($curEnemy.css('top')) + parseInt($curEnemy.css('height'))
+      }
+      index++
+    });
+
+    $curProjectile.css('left', startingPositionLeft+"px");
+    $curProjectile.css('top', startingPositionBottom+"px");
+
+    // Make the projectiles fall towards the bottom
+    setInterval( function() {
+      $curProjectile.css('top', parseInt($curProjectile.css('top'))+PROJECTILE_SPEED);
+      // Check to see if the projectile has left the game/viewing window
+      if (parseInt($curProjectile.css('top')) > (gwhGame.height() - $curProjectile.height())) {
+        $curProjectile.remove();
+      }
+    }, OBJECT_REFRESH_RATE);
+  }
+
 }
 
 // Check for any collisions and update/remove the appropriate object if needed
@@ -530,354 +803,6 @@ function isColliding(o1, o2, offset) {
   return false;
 }
 
-// Handles enemy creation
-function createEnemies(ENEMY_SIZE) {
-	var enemyOffset = 1.1*ENEMY_SIZE;
-	var i;
-	for (i = 0; i < ENEMY_PATTERN[CUR_LEVEL][0]; i++) {
-		var j;
-		for (j = 0; j < ENEMY_PATTERN[CUR_LEVEL][1]; j++) {
-			var enemyDivStr = "<div id='e-" + enemyIdx + "' class='enemy'></div>"
-			gwhGame.append(enemyDivStr);
-			var $curEnemy = $('#e-'+enemyIdx);
-			$curEnemy.css('position',"absolute");
-			$curEnemy.css('left', (5 + (i * enemyOffset)) + "px");
-			$curEnemy.css('top', (5 + (j * enemyOffset)) + "px");
-			$curEnemy.css('width', ENEMY_SIZE + "px");
-			$curEnemy.css('height', ENEMY_SIZE + "px");
-			$curEnemy.append("<img src='img/snowman.png' height ='" + ENEMY_SIZE + " width =" + ENEMY_SIZE + "'/>");
-			$curEnemy.children('img').attr('position', 'absolute');
-			enemyIdx++;
-		}
-	}
-}
-
-function createBunkers() {
-  var bunkerSpacing = Math.floor((900 - (NUM_BUNKERS[CUR_LEVEL] * BUNKERSIZE)) / ((NUM_BUNKERS[CUR_LEVEL] + 1)));
-  var i;
-  for (i = 0; i < NUM_BUNKERS[CUR_LEVEL]; i++) {
-    var bunkerDivStr = "<div id='b-" + bunkerIdx + "' class='bunker'></div>"
-		gwhGame.append(bunkerDivStr);
-		var $curBunker = $('#b-'+bunkerIdx);
-		$curBunker.css('position',"absolute");
-		$curBunker.css('left', ((bunkerSpacing) + (i * (BUNKERSIZE + bunkerSpacing))) + "px");
-		$curBunker.css('top', ((parseInt(gwhGame.height()) - 200) + "px"));
-		$curBunker.css('width', "112 px");
-		$curBunker.css('height', "112 px");
-		$curBunker.append("<img src='img/gift.png' height = " + BUNKERSIZE + " px width = " + BUNKERSIZE + " px'/>");
-		$curBunker.children('img').attr('position', 'absolute');
-		bunkerIdx++;
-  }
-
-}
-
-//Handles enemy movement
-function moveEnemies() {
-  if(!GAME_PAUSED){
-    if (ENEMY_DIRECTION === "left") {
-      $('.enemy').each( function() {
-        var $curEnemy = $(this);
-        if ((parseInt($curEnemy.css('left')) - ENEMY_SPEED) < 5) {
-          ENEMY_DIRECTION = "right";
-          $('.enemy').each( function() {
-            var $curEnemy = $(this);
-            $curEnemy.css('top', parseInt($curEnemy.css('top')) + (ENEMY_SIZE  * ENEMY_DESCENT_SPEED[CUR_LEVEL]));
-            if (parseInt($curEnemy.css('top')) > 450) {
-              GAME_OVER = true;
-			  GAME_PAUSED = true;
-            }
-          });
-          return false;
-        }
-      });
-      if (ENEMY_DIRECTION === "left") {
-        $('.enemy').each( function() {
-        var $curEnemy = $(this);
-        $curEnemy.css('left', parseInt($curEnemy.css('left')) - ENEMY_SPEED)
-        });
-      }
-    }
-    else {
-      $('.enemy').each( function() {
-        var $curEnemy = $(this);
-        if ((parseInt($curEnemy.css('left')) + ENEMY_SPEED) > maxEnemyPosX) {
-          ENEMY_DIRECTION = "left";
-          $('.enemy').each( function() {
-            var $curEnemy = $(this);
-            $curEnemy.css('top', parseInt($curEnemy.css('top')) + (ENEMY_SIZE * ENEMY_DESCENT_SPEED[CUR_LEVEL]));
-            if (parseInt($curEnemy.css('top')) > 450) {
-              GAME_OVER = true;
-			  GAME_PAUSED = true;
-            }
-          });
-          return false;
-        }
-      });
-      if (ENEMY_DIRECTION === "right") {
-        $('.enemy').each( function() {
-        var $curEnemy = $(this);
-        $curEnemy.css('left', parseInt($curEnemy.css('left')) + ENEMY_SPEED)
-        });
-      }
-    }
-    if (NUM_ENEMIES < threshold) {
-      ENEMY_SPEED = ENEMY_SPEED*2;
-      threshold = Math.ceil(threshold*ENEMY_DOUBLE_RATIO);
-    }
-  }
-}
-
-// Handle projectile creation events
-function createProjectile() {
-
-  if (!GAME_PAUSED){
-
-    var projectileDivStr = "<div id='a-" + projectileIdx + "' class='projectile'></div>"
-    // Add the snowball to the screen
-    gwhGame.append(projectileDivStr);
-    // Create and projectile handle based on newest index
-    var $curProjectile = $('#a-'+projectileIdx);
-
-    projectileIdx++;  // update the index to maintain uniqueness next time
-
-    var projectileEnemyID = Math.floor(Math.random() * NUM_ENEMIES);
-    $curProjectile.css('width', PROJECTILE_SIZE+"px");
-    $curProjectile.css('height', PROJECTILE_SIZE+"px");
-
-    if(Math.random() < 1/3){
-      $curProjectile.append("<img src='img/blueBook.png' height='" + PROJECTILE_SIZE + "'/>")
-    } else if(Math.random() < 2/3) {
-      $curProjectile.append("<img src='img/icicle.png' height='" + PROJECTILE_SIZE + "'/>")
-    } else {
-      $curProjectile.append("<img src='img/glasses.png' height='" + PROJECTILE_SIZE + "'/>")
-    }
-
-    var index = 0
-    let startingPositionLeft;
-    let startingPositionBottom;
-    $('.enemy').each( function() {
-      var $curEnemy = $(this);
-      if(index === projectileEnemyID){
-        startingPositionLeft = parseInt($curEnemy.css('left')) + parseInt($curEnemy.css('width'))/2.5
-        startingPositionBottom = parseInt($curEnemy.css('top')) + parseInt($curEnemy.css('height'))
-      }
-      index++
-    });
-
-    $curProjectile.css('left', startingPositionLeft+"px");
-    $curProjectile.css('top', startingPositionBottom+"px");
-
-    // Make the projectiles fall towards the bottom
-    setInterval( function() {
-      $curProjectile.css('top', parseInt($curProjectile.css('top'))+PROJECTILE_SPEED);
-      // Check to see if the projectile has left the game/viewing window
-      if (parseInt($curProjectile.css('top')) > (gwhGame.height() - $curProjectile.height())) {
-        $curProjectile.remove();
-      }
-    }, OBJECT_REFRESH_RATE);
-  }
-
-}
-
-// Handle "fire" [snowball] events
-function fireSnowball() {
-  if(!GAME_PAUSED){
-
-    var snowballDivStr = "<div id='r-" + snowballIdx + "' class='snowball'><img src='img/snowball.png'/></div>";
-    // Add the snowball to the screen
-    gwhGame.append(snowballDivStr);
-    // Create and snowball handle based on newest index
-    var curSnowball = $('#r-'+snowballIdx);
-    let curImg = $('#r-'+snowballIdx + ' img');
-    snowballIdx++;  // update the index to maintain uniqueness next time
-
-    curSnowball.css('top', SNOWMAN_OBJ.snowmanStyle.top);
-    var rxPos = SNOWMAN_OBJ.snowmanStyle.left + snowman.width()/4;  // In order to center the snowball, shift by half the div size (recall: origin [0,0] is top-left of div)
-    curSnowball.css('left', rxPos+"px");
-	curSnowball.css('fontSize', SNOWBALL_DURABILITY * 10); // my workaround for saving durability. If you guys can think of anything better, please change this
-    curSnowball.css('height', SNOWBALL_SIZE + "px");
-    curSnowball.css('width', SNOWBALL_SIZE + "px");
-    curImg.css('height', SNOWBALL_SIZE + "px");
-    curImg.css('width', SNOWBALL_SIZE + "px");
-
-
-    // Create movement update handler
-    setInterval( function() {
-      curSnowball.css('top', parseInt(curSnowball.css('top'))-SNOWBALL_SPEED);
-      // Check to see if the snowball has left the game/viewing window
-      if (parseInt(curSnowball.css('top')) < 0) {
-        //curSnowball.hide();
-        curSnowball.remove();
-      }
-    }, OBJECT_REFRESH_RATE);
-    SNOWBALL_TIMER = 0;
-
-  }
-
-}
-
-function fire_double_snowball() {
-	if(!GAME_PAUSED){
-
-	//make the first snowball
-    var snowballDivStr = "<div id='r-" + snowballIdx + "' class='snowball'><img src='img/snowball.png'/></div>";
-    // Add the snowball to the screen
-    gwhGame.append(snowballDivStr);
-    // Create and snowball handle based on newest index
-    var curSnowball = $('#r-'+snowballIdx);
-    let curImg = $('#r-'+snowballIdx + ' img');
-    snowballIdx++;  // update the index to maintain uniqueness next time
-	
-	// make the second snowball
-    var snowballDivStr = "<div id='r-" + snowballIdx + "' class='snowball'><img src='img/snowball.png'/></div>";
-    // Add the snowball to the screen
-    gwhGame.append(snowballDivStr);
-    // Create and snowball handle based on newest index
-    var curSnowball2 = $('#r-'+snowballIdx);
-    let curImg2 = $('#r-'+snowballIdx + ' img');
-    snowballIdx++;  // update the index to maintain uniqueness next time
-	
-    curSnowball.css('top', SNOWMAN_OBJ.snowmanStyle.top);
-	curSnowball2.css('top', SNOWMAN_OBJ.snowmanStyle.top);
-    var rxPos = SNOWMAN_OBJ.snowmanStyle.left + snowman.width()/4 + SNOWBALL_SIZE/2;  
-    var rxPos2 = SNOWMAN_OBJ.snowmanStyle.left + snowman.width()/4 - SNOWBALL_SIZE/2;  
-	curSnowball.css('left', rxPos+"px");
-	curSnowball2.css('left', rxPos2+"px");
-	curSnowball.css('fontSize', SNOWBALL_DURABILITY * 10); // my workaround for saving durability. If you guys can think of anything better, please change this
-	curSnowball2.css('fontSize', SNOWBALL_DURABILITY * 10); // my workaround for saving durability. If you guys can think of anything better, please change this
-    curSnowball.css('height', SNOWBALL_SIZE + "px");
-	curSnowball2.css('height', SNOWBALL_SIZE + "px");
-    curSnowball.css('width', SNOWBALL_SIZE + "px");
-	curSnowball2.css('width', SNOWBALL_SIZE + "px");
-	curImg.css('height', SNOWBALL_SIZE + "px");
-	curImg2.css('height', SNOWBALL_SIZE + "px");
-    curImg.css('width', SNOWBALL_SIZE + "px");
-	curImg2.css('width', SNOWBALL_SIZE + "px");
-
-    // Create movement update handler
-    setInterval( function() {
-      curSnowball.css('top', parseInt(curSnowball.css('top'))-SNOWBALL_SPEED);
-      // Check to see if the snowball has left the game/viewing window
-      if (parseInt(curSnowball.css('top')) < 0) {
-        //curSnowball.hide();
-        curSnowball.remove();
-      }
-    }, OBJECT_REFRESH_RATE);
-	setInterval( function() {
-      curSnowball2.css('top', parseInt(curSnowball2.css('top'))-SNOWBALL_SPEED);
-      // Check to see if the snowball has left the game/viewing window
-      if (parseInt(curSnowball2.css('top')) < 0) {
-        //curSnowball.hide();
-        curSnowball.remove();
-      }
-    }, OBJECT_REFRESH_RATE);
-    SNOWBALL_TIMER = 0;
-
-  }
-}
-
-function fire_triple_snowball() {
-	if(!GAME_PAUSED){
-
-	//make the first snowball
-    var snowballDivStr = "<div id='r-" + snowballIdx + "' class='snowball'><img src='img/snowball.png'/></div>";
-    // Add the snowball to the screen
-    gwhGame.append(snowballDivStr);
-    // Create and snowball handle based on newest index
-    var curSnowball = $('#r-'+snowballIdx);
-    let curImg = $('#r-'+snowballIdx + ' img');
-    snowballIdx++;  // update the index to maintain uniqueness next time
-	
-	// make the second snowball
-    snowballDivStr = "<div id='r-" + snowballIdx + "' class='snowball'><img src='img/snowball.png'/></div>";
-    // Add the snowball to the screen
-    gwhGame.append(snowballDivStr);
-    // Create and snowball handle based on newest index
-    var curSnowball2 = $('#r-'+snowballIdx);
-    let curImg2 = $('#r-'+snowballIdx + ' img');
-    snowballIdx++;  // update the index to maintain uniqueness next time
-	
-	// make the third snowball
-    snowballDivStr = "<div id='r-" + snowballIdx + "' class='snowball'><img src='img/snowball.png'/></div>";
-    // Add the snowball to the screen
-    gwhGame.append(snowballDivStr);
-    // Create and snowball handle based on newest index
-    var curSnowball3 = $('#r-'+snowballIdx);
-    let curImg3 = $('#r-'+snowballIdx + ' img');
-    snowballIdx++;  // update the index to maintain uniqueness next time
-	
-    curSnowball.css('top', SNOWMAN_OBJ.snowmanStyle.top);
-	curSnowball2.css('top', SNOWMAN_OBJ.snowmanStyle.top);
-	curSnowball3.css('top', SNOWMAN_OBJ.snowmanStyle.top);
-    var rxPos = SNOWMAN_OBJ.snowmanStyle.left + snowman.width()/4 + SNOWBALL_SIZE;  
-    var rxPos2 = SNOWMAN_OBJ.snowmanStyle.left + snowman.width()/4 - SNOWBALL_SIZE/2;
-	var rxPos3 = SNOWMAN_OBJ.snowmanStyle.left + snowman.width()/4 + SNOWBALL_SIZE/4;	
-	curSnowball.css('left', rxPos+"px");
-	curSnowball2.css('left', rxPos2+"px");
-	curSnowball3.css('left', rxPos3+"px");
-	curSnowball.css('fontSize', SNOWBALL_DURABILITY * 10); // my workaround for saving durability. If you guys can think of anything better, please change this
-	curSnowball2.css('fontSize', SNOWBALL_DURABILITY * 10); // my workaround for saving durability. If you guys can think of anything better, please change this
-	curSnowball3.css('fontSize', SNOWBALL_DURABILITY * 10); // my workaround for saving durability. If you guys can think of anything better, please change this
-    curSnowball.css('height', SNOWBALL_SIZE + "px");
-	curSnowball2.css('height', SNOWBALL_SIZE + "px");
-	curSnowball3.css('height', SNOWBALL_SIZE + "px");
-    curSnowball.css('width', SNOWBALL_SIZE + "px");
-	curSnowball2.css('width', SNOWBALL_SIZE + "px");
-	curSnowball3.css('width', SNOWBALL_SIZE + "px");
-    curImg.css('height', SNOWBALL_SIZE + "px");
-	curImg2.css('height', SNOWBALL_SIZE + "px");
-	curImg3.css('height', SNOWBALL_SIZE + "px");
-    curImg.css('width', SNOWBALL_SIZE + "px");
-	curImg2.css('width', SNOWBALL_SIZE + "px");
-	curImg3.css('width', SNOWBALL_SIZE + "px");
-
-    // Create movement update handler
-    setInterval( function() {
-      curSnowball.css('top', parseInt(curSnowball.css('top'))-SNOWBALL_SPEED);
-	  if (parseInt(curSnowball.css('left')) + SNOWBALL_SIZE < 900) {
-		curSnowball.css('left', parseInt(curSnowball.css('left'))+SNOWBALL_SPEED/8);
-      }
-      // Check to see if the snowball has left the game/viewing window
-      if (parseInt(curSnowball.css('top')) < 0) {
-        curSnowball.remove();
-      }
-	  
-    }, OBJECT_REFRESH_RATE);
-	setInterval( function() {
-      curSnowball2.css('top', parseInt(curSnowball2.css('top'))-SNOWBALL_SPEED);
-	  curSnowball2.css('left', parseInt(curSnowball2.css('left')) - SNOWBALL_SPEED/16);
-      // Check to see if the snowball has left the game/viewing window
-      if (parseInt(curSnowball2.css('top')) < 0) {
-        //curSnowball.hide();
-        curSnowball.remove();
-      }
-    }, OBJECT_REFRESH_RATE);
-    SNOWBALL_TIMER = 0;
-    setInterval( function() {
-      curSnowball3.css('top', parseInt(curSnowball3.css('top'))-SNOWBALL_SPEED);
-      // Check to see if the snowball has left the game/viewing window
-      if (parseInt(curSnowball3.css('top')) < 0) {
-        //curSnowball.hide();
-        curSnowball.remove();
-      }
-    }, OBJECT_REFRESH_RATE);
-  }
-}
-
-// Handle snowman movement events
-function moveSnowman(arrow) {
-  if(!GAME_PAUSED){
-    switch (arrow) {
-      case KEYS.left:   // left arrow
-        SNOWMAN_OBJ.snowmanStyle.left = Math.max(5, SNOWMAN_OBJ.snowmanStyle.left - SNOWMAN_SPEED);
-      break;
-      case KEYS.right:  // right arrow
-        SNOWMAN_OBJ.snowmanStyle.left = Math.min(maxSnowmanPosX, SNOWMAN_OBJ.snowmanStyle.left + SNOWMAN_SPEED);
-      break;
-    }
-  }
-}
-
 function newLevel(){
   GAME_PAUSED = true;
   console.log("proceeding to next level");
@@ -890,9 +815,9 @@ function newLevel(){
     $('#store').show();
     $('#levelScreen').show();
 	gwhGame.hide();
-    ENEMY_SPEED = Math.random()*5 + 0.5; // mess around for max speed
-	ENEMY_DESCENT_SPEED[CUR_LEVEL] = Math.random()*0.4 + 0.1 // mess around for max speed
-	ENEMY_PATTERN[CUR_LEVEL] = [Math.floor(Math.random()*17.5) + 3,Math.floor(Math.random()*2.99) + 1];// // mess around for min/max
+    ENEMY_SPEED = Math.random()*5 + 0.5;
+	ENEMY_DESCENT_SPEED[CUR_LEVEL] = Math.random()*0.4 + 0.1
+	ENEMY_PATTERN[CUR_LEVEL] = [Math.floor(Math.random()*17.5) + 3,Math.floor(Math.random()*2.99) + 1];
     PROJECTILE_SPAWN_RATE[CUR_LEVEL] = Math.random()*1500 + 500;
 	threshold = Math.ceil(ENEMY_DOUBLE_RATIO * ENEMY_PATTERN[CUR_LEVEL][0] * ENEMY_PATTERN[CUR_LEVEL][1]);
 	NUM_ENEMIES = ENEMY_PATTERN[CUR_LEVEL][1] * ENEMY_PATTERN[CUR_LEVEL][0];
@@ -945,6 +870,81 @@ function newLevel(){
   }
 }
 
+// opens the game store
+function openStore() {
+  IN_STORE = true;
+  $('#levelScreen').hide();
+  gwhStore.show();
+  gwhStoreItems.show();
+}
+
+// closes the game store
+function closeStore() {
+  console.log("closing");
+  $('#store').hide();
+  IN_STORE = false;
+  // go back to level page
+  gwhStore.hide();
+  gwhStoreItems.hide();
+  $('#levelScreen').show();
+  createEnemies(ENEMY_SIZE);
+  createBunkers();
+  cr_prj_id = setInterval(function() {
+        createProjectile();
+      }, PROJECTILE_SPAWN_RATE[CUR_LEVEL]);
+  setTimeout(function() {
+    $('#levelScreen').hide();
+    gwhGame.show();
+    GAME_PAUSED = false;
+  }, 5000)
+}
+
+// continues game with randomly-generated levels
+function continueGame() {
+	GAME_COMPLETE = false;
+	GAME_OVER = false;
+	GAME_CONTINUE = true;
+	$('#winner').hide();
+}
+
+// Restarts the game when user presses the r button
+function restartGame() {
+  GAME_OVER = false;
+  GAME_COMPLETE = false;
+  GAME_CONTINUE = false;
+  NUM_ENEMIES = -1;  
+  CUR_LEVEL = 0;
+  LEVEL_OBJ.level = 1;
+  SCORE_OBJ.score = 0;
+  console.log("restarting...");
+  reset_store();
+  $('#winner').hide();
+  gwhOver.hide();
+  $('.snowball').remove();
+  $('.projectile').remove();
+  $('.bunker').remove();
+  $('#store').hide();
+  $('#levelScreen').show();
+
+  setTimeout(function() {
+	cr_prj_id = setInterval(function() {
+        createProjectile();
+      }, PROJECTILE_SPAWN_RATE[CUR_LEVEL]);
+    gwhGame.show();
+    $('#levelScreen').hide();
+	  ENEMY_DIRECTION = "right";
+    ENEMY_SPEED = LEVEL_SPEED[CUR_LEVEL];
+    threshold = Math.ceil(ENEMY_DOUBLE_RATIO * ENEMY_PATTERN[CUR_LEVEL][0] * ENEMY_PATTERN[CUR_LEVEL][1]);
+  	NUM_ENEMIES = ENEMY_PATTERN[CUR_LEVEL][1] * ENEMY_PATTERN[CUR_LEVEL][0];
+  	maxEnemyPosX += ENEMY_SIZE;
+  	ENEMY_SIZE = Math.min(100, 100 * 8 / (ENEMY_PATTERN[CUR_LEVEL][0] + 1));
+  	maxEnemyPosX -= ENEMY_SIZE;
+    createEnemies(ENEMY_SIZE);
+    createBunkers();
+    GAME_PAUSED = false;
+  }, 5000);
+}
+
 function reset_store() {
 	LIVES_OBJ.lives = 1;
 	SNOWBALL_SIZE		= 20;
@@ -990,17 +990,6 @@ function reset_store() {
 	FAST2_OBJ.shotStyle.border = "none";
 	FAST2_OBJ.pic = "img/fast2_locked.png";
 }
-
-
-function add_equipment() {
-	if (NUM_EQUIPPED < 3) {
-		//essentially run their function (just do the thing)
-	}
-	else { // do something to this effect; likely just have text pop up or highlight
-		alert("Sorry, you can only have 3 upgrades equipped at a given time. You can unequip upgrades by clicking their icons.");
-	}
-}
-
 
 /* Things we still need
 		N - design levels

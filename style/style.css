@@ -25,6 +25,35 @@
 .controls {
 	display: none;
 }
+
+/* Game Objects */
+#enterprise {
+  position: absolute;
+  display: inline-block;
+}
+.snowman {
+  height: 75px;
+  color: #fff;
+}
+.snowball{
+  position: absolute;
+}
+.snowball img {
+  height: 40px;
+}
+.projectile {
+  position: absolute;
+}
+
+/* Score Objects */
+.score-box {
+  top: 5;
+  position: relative;
+  text-align: left;
+  font-size: 42px;
+  font-weight: bold;
+}
+
 .store {
 	display: none;
 	position: absolute;
@@ -68,43 +97,8 @@
 	z-index: 2;
 }
 
-.hidden { 
-display: none; 
-position: absolute;
-left: -30;
-background-color: gray;
-}
-.trigger:hover + .hidden { display: inline; }
-
 #winner {
 	text-align: center;
 	display: none;
 }
 
-/* Game Objects */
-#enterprise {
-  position: absolute;
-  display: inline-block;
-}
-.snowman {
-  height: 75px;
-  color: #fff;
-}
-.snowball{
-  position: absolute;
-}
-.snowball img {
-  height: 40px;
-}
-.projectile {
-  position: absolute;
-}
-
-/* Score Objects */
-.score-box {
-  top: 5;
-  position: relative;
-  text-align: left;
-  font-size: 42px;
-  font-weight: bold;
-}
