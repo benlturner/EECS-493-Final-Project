@@ -46,6 +46,7 @@ var GAME_OVER = false;
 var GAME_COMPLETE = false;
 var GAME_CONTINUE = false;
 var IN_STORE = false;
+var PROJECTILES_FALLING = false;
 
 // Global Window Handles (gwh__)  --> replaced with Vue.js
 var gwhGame, gwhOver, gwhStatus, gwhObjectives, gwhControls;
@@ -54,11 +55,11 @@ var gwhGame, gwhOver, gwhStatus, gwhObjectives, gwhControls;
 var snowman;
 
 // Level Data
-var ENEMY_PATTERN = [[2,1]]; // Enemies Wide, Enemies Deep
-var PROJECTILE_SPAWN_RATE = [10200];  // ms
-var NUM_BUNKERS = [4];
-var LEVEL_SPEED = [2]; 							// Enemy Horizontal Speed
-var ENEMY_DESCENT_SPEED = [0.1]	// Enemy Vertical Speed
+var ENEMY_PATTERN = [[7,1],[10,1],[6,2],[15,1],[8,1],[5,3],[10,1],[7,2],[8,3],[10,2],[10,3]]; // Enemies Wide, Enemies Deep
+var PROJECTILE_SPAWN_RATE = [1400,1200,1300,800,700,1100,700,1400,1000,700,1000];  // ms
+var NUM_BUNKERS = [4,3,5,4,5,3,2,4,2,1,0];
+var LEVEL_SPEED = [2,1.8,2.5,2,4,1.2,3,2,1.1,2.5,2]; 							// Enemy Horizontal Speed
+var ENEMY_DESCENT_SPEED = [0.25,0.4,0.3,0.25,0.8,0.3,0.4,0.25,0.2,0.4,0.3]	// Enemy Vertical Speed
 const NUM_LEVELS = ENEMY_PATTERN.length;
 
 // Current Level Vars
@@ -92,7 +93,7 @@ $(document).ready( function() {
   gwhStoreItems = $('.items');
   snowman   = $('#enterprise');  // set the global snowman handle
   // Set global positions
-  maxSnowmanPosX = gwhGame.width() - snowman.width();
+  maxSnowmanPosX = gwhGame.width() - 50;
   maxSnowmanPosY = gwhGame.height() - 70;
 
   SNOWMAN_OBJ.snowmanStyle.top = maxSnowmanPosY;
@@ -141,14 +142,18 @@ function setupIntervals() {
   maxEnemyPosX = gwhGame.width() - ENEMY_SIZE + 10;
   createEnemies(ENEMY_SIZE);
   createBunkers();
-  cr_prj_id = setInterval(function() {
-    createProjectile();
-  }, PROJECTILE_SPAWN_RATE[CUR_LEVEL]);
+  if (!PROJECTILES_FALLING) {
+	cr_prj_id = setInterval(function() {
+	  createProjectile();
+	}, PROJECTILE_SPAWN_RATE[CUR_LEVEL]);
+	PROJECTILES_FALLING = true;
+  }
   // Move enemies
   let mv_en_id = setInterval ( function() {
     moveEnemies();
     if (NUM_ENEMIES === 0 && GAME_COMPLETE === false) {
       clearInterval(cr_prj_id);
+	  PROJECTILES_FALLING = false;
       newLevel();
     }
 	if (GAME_COMPLETE) {
@@ -157,6 +162,7 @@ function setupIntervals() {
       $('.projectile').remove();
       $('.enemy').remove();
 	  clearInterval(cr_prj_id);
+	  PROJECTILES_FALLING = false;
       // Hide primary windows
       gwhGame.hide();
 	  $('#winner').show();
@@ -167,6 +173,7 @@ function setupIntervals() {
       $('.projectile').remove();
       $('.enemy').remove();
 	  clearInterval(cr_prj_id);
+	  PROJECTILES_FALLING = false;
       // Hide primary windows
       gwhGame.hide();
 
@@ -188,7 +195,7 @@ function createEnemies(ENEMY_SIZE) {
 			var $curEnemy = $('#e-'+enemyIdx);
 			$curEnemy.css('position',"absolute");
 			$curEnemy.css('left', (5 + (i * enemyOffset)) + "px");
-			$curEnemy.css('top', (5 + (j * enemyOffset)) + "px");
+			$curEnemy.css('top', (15 + (j * enemyOffset)) + "px");
 			$curEnemy.css('width', ENEMY_SIZE + "px");
 			$curEnemy.css('height', ENEMY_SIZE + "px");
 			$curEnemy.append("<img src='img/snowman.png' height ='" + ENEMY_SIZE + " width =" + ENEMY_SIZE + "'/>");
@@ -504,7 +511,7 @@ function moveSnowman(arrow) {
   if(!GAME_PAUSED){
     switch (arrow) {
       case KEYS.left:   // left arrow
-        SNOWMAN_OBJ.snowmanStyle.left = Math.max(5, SNOWMAN_OBJ.snowmanStyle.left - SNOWMAN_SPEED);
+        SNOWMAN_OBJ.snowmanStyle.left = Math.max(15, SNOWMAN_OBJ.snowmanStyle.left - SNOWMAN_SPEED);
       break;
       case KEYS.right:  // right arrow
         SNOWMAN_OBJ.snowmanStyle.left = Math.min(maxSnowmanPosX, SNOWMAN_OBJ.snowmanStyle.left + SNOWMAN_SPEED);
@@ -830,14 +837,17 @@ function newLevel(){
       if (!IN_STORE) {
 	    createEnemies(ENEMY_SIZE);
         createBunkers();
-	    cr_prj_id = setInterval(function() {
-          createProjectile();
-        }, PROJECTILE_SPAWN_RATE[CUR_LEVEL]);
+		if (!PROJECTILES_FALLING) {
+			cr_prj_id = setInterval(function() {
+				createProjectile();
+			}, PROJECTILE_SPAWN_RATE[CUR_LEVEL]);
+			PROJECTILES_FALLING = true;
+		}
         $('#levelScreen').hide();
         gwhGame.show();
         GAME_PAUSED = false;
       }
-    }, 5000)
+    }, 7000)
   }
   else if (CUR_LEVEL < NUM_LEVELS) {
     LEVEL_OBJ.level += 1
@@ -855,12 +865,15 @@ function newLevel(){
       if (!IN_STORE) {
 	    createEnemies(ENEMY_SIZE);
         createBunkers();
-	    cr_prj_id = setInterval(function() {
-          createProjectile();
-        }, PROJECTILE_SPAWN_RATE[CUR_LEVEL]);
-        $('#levelScreen').hide();
-        gwhGame.show();
-        GAME_PAUSED = false;
+	    if (!PROJECTILES_FALLING) {
+			cr_prj_id = setInterval(function() {
+				createProjectile();
+			}, PROJECTILE_SPAWN_RATE[CUR_LEVEL]);
+			PROJECTILES_FALLING = true;
+		}
+		$('#levelScreen').hide();
+		gwhGame.show();
+		GAME_PAUSED = false;
       }
     }, 5000)
   }
@@ -880,7 +893,6 @@ function openStore() {
 
 // closes the game store
 function closeStore() {
-  console.log("closing");
   $('#store').hide();
   IN_STORE = false;
   // go back to level page
@@ -889,14 +901,17 @@ function closeStore() {
   $('#levelScreen').show();
   createEnemies(ENEMY_SIZE);
   createBunkers();
-  cr_prj_id = setInterval(function() {
+  if (!PROJECTILES_FALLING) {
+	cr_prj_id = setInterval(function() {
         createProjectile();
       }, PROJECTILE_SPAWN_RATE[CUR_LEVEL]);
+	  PROJECTILES_FALLING = true;
+  }
   setTimeout(function() {
     $('#levelScreen').hide();
     gwhGame.show();
     GAME_PAUSED = false;
-  }, 5000)
+  }, 7000)
 }
 
 // continues game with randomly-generated levels
@@ -927,9 +942,12 @@ function restartGame() {
   $('#levelScreen').show();
 
   setTimeout(function() {
-	cr_prj_id = setInterval(function() {
-        createProjectile();
-      }, PROJECTILE_SPAWN_RATE[CUR_LEVEL]);
+	  if (!PROJECTILES_FALLING) {
+		cr_prj_id = setInterval(function() {
+			createProjectile();
+		}, PROJECTILE_SPAWN_RATE[CUR_LEVEL]);
+		PROJECTILES_FALLING = true;
+	  }
     gwhGame.show();
     $('#levelScreen').hide();
 	  ENEMY_DIRECTION = "right";
@@ -942,7 +960,7 @@ function restartGame() {
     createEnemies(ENEMY_SIZE);
     createBunkers();
     GAME_PAUSED = false;
-  }, 5000);
+  }, 7000);
 }
 
 function reset_store() {

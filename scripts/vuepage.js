@@ -49,7 +49,7 @@ function createVueObjects() {
 			},
 			pic: "img/snowman2locked.png",
 			condition: "locked",
-			price: 10000
+			price: 5000
 		},
 		methods: {
 			handleClick: function() {
@@ -96,7 +96,7 @@ function createVueObjects() {
 			},
 			pic: "img/snowman3locked.png",
 			condition: "locked",
-			price: 50000
+			price: 20000
 		},
 		methods: {
 			handleClick: function() {
@@ -142,14 +142,14 @@ function createVueObjects() {
 				left: 540,
 			},
 			pic: "img/life.png",
-			price: 5000
+			price: 2000
 		},
 		methods: {
 			handleClick: function() {
 				if (SCORE_OBJ.score >= this.price) {
 					SCORE_OBJ.score -= this.price;
 					LIVES_OBJ.lives += 1;
-					this.price += 5000;
+					this.price += 2000;
 					console.log("Bought another life");
 				}
 			}
@@ -167,7 +167,7 @@ function createVueObjects() {
 			},
 			pic: "img/ghost_ball_locked.png",
 			condition: "locked",
-			price: 10000
+			price: 3000
 		},
 		methods: {
 			handleClick: function() {
@@ -215,7 +215,7 @@ function createVueObjects() {
 			},
 			pic: "img/double_shot_locked.png",
 			condition: "locked",
-			price: 10000
+			price: 5000
 		},
 		methods: {
 			handleClick: function() {
@@ -275,7 +275,7 @@ function createVueObjects() {
 			},
 			pic: "img/triple_shot_locked.png",
 			condition: "locked",
-			price: 20000
+			price: 10000
 		},
 		methods: {
 			handleClick: function() {
@@ -323,7 +323,7 @@ function createVueObjects() {
 			},
 			pic: "img/pierce1_locked.png",
 			condition: "locked",
-			price: 10000
+			price: 4000
 		},
 		methods: {
 			handleClick: function() {
@@ -377,7 +377,7 @@ function createVueObjects() {
 			},
 			pic: "img/pierce2_locked.png",
 			condition: "locked",
-			price: 20000
+			price: 8000
 		},
 		methods: {
 			handleClick: function() {
@@ -425,7 +425,7 @@ function createVueObjects() {
 			},
 			pic: "img/large_locked.png",
 			condition: "locked",
-			price: 10000
+			price: 4000
 		},
 		methods: {
 			handleClick: function() {
@@ -479,7 +479,7 @@ function createVueObjects() {
 			},
 			pic: "img/huge_locked.png",
 			condition: "locked",
-			price: 20000
+			price: 8000
 		},
 		methods: {
 			handleClick: function() {
@@ -527,7 +527,7 @@ function createVueObjects() {
 			},
 			pic: "img/fast1_locked.png",
 			condition: "locked",
-			price: 10000
+			price: 3500
 		},
 		methods: {
 			handleClick: function() {
@@ -581,7 +581,7 @@ function createVueObjects() {
 			},
 			pic: "img/fast2_locked.png",
 			condition: "locked",
-			price: 20000
+			price: 7000
 		},
 		methods: {
 			handleClick: function() {
