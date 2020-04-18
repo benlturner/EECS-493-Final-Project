@@ -1002,13 +1002,7 @@ function add_equipment() {
 }
 
 
-/* Things we need/want
+/* Things we still need
 		N - design levels
-		N - a shop
-			lives, cosmetics, double/triple shot, shots pierce through 1|2 enemies, shots go through bunkers, larger snowballs 1|2, quicker firing 1|2.
-				maybe permanently unlock upgrades, but players can only have 3 equiped at a time?
-		* Shop should let them know that they can spend points to buy items, that snowman outfits can be applied or unapplied by clicking on them, that unlocked snowball upgrades can be equipped and unequiped by clicking on them,
-			and that they can only have 3 upgrades equipped at a given time.
 		N - comment everything, remove useless code, replace magic numbers with variables, shrink code using helper functions
-		* If I really wanted to make moving and shooting work, I'd on keydown start a loop to shoot and on release destroy the loop;
 */

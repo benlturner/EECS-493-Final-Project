@@ -44,8 +44,8 @@ function createVueObjects() {
 			outfitStyle: {
 				position: "absolute",
 				border: "none",
-				top: 10,
-				left: 10,
+				top: 130,
+				left: 60,
 			},
 			pic: "img/snowman2locked.png",
 			condition: "locked",
@@ -91,8 +91,8 @@ function createVueObjects() {
 			outfitStyle: {
 				position: "absolute",
 				border: "none",
-				top: 10,
-				left: 110,
+				top: 130,
+				left: 260,
 			},
 			pic: "img/snowman3locked.png",
 			condition: "locked",
@@ -138,9 +138,8 @@ function createVueObjects() {
 		data: {
 			lifeStyle: {
 				position: "absolute",
-				border: "none",
-				top: 10,
-				left: 210,
+				top: 130,
+				left: 540,
 			},
 			pic: "img/life.png",
 			price: 5000
@@ -157,14 +156,62 @@ function createVueObjects() {
 		}
 	});
 	
+	GHOST_OBJ = new Vue({
+		el: '#ghost',
+		data: {
+			shotStyle: {
+				position: "absolute",
+				border: "none",
+				top: 130,
+				left: 740,
+			},
+			pic: "img/ghost_ball_locked.png",
+			condition: "locked",
+			price: 10000
+		},
+		methods: {
+			handleClick: function() {
+				switch(this.condition) {
+					case "locked": {
+						if (SCORE_OBJ.score >= this.price) {
+							SCORE_OBJ.score -= this.price;
+							this.pic = "img/ghost_ball.png";
+							this.condition = "unlocked";
+							console.log("unlocked ghost shot");
+						}
+						break;
+					}
+					case "unlocked": {
+						if (NUM_EQUIPPED < 3) {
+							this.condition = "equipped";
+							this.shotStyle.border = "solid blue 10px"
+							NUM_EQUIPPED += 1;
+							GHOST_SNOWBALL = true;
+							console.log("equipped ghost shot");
+						}
+						break;
+					}
+					case "equipped": {
+						NUM_EQUIPPED -= 1;
+						GHOST_SNOWBALL = false;
+						this.shotStyle.border = "none";
+						this.condition = "unlocked";
+						console.log("unequipped ghost shot");
+						
+					}
+				}
+			}
+		}
+	});
+	
 	DOUBLE_SHOT_OBJ = new Vue({
 		el: '#doubleShot',
 		data: {
 			shotStyle: {
 				position: "absolute",
 				border: "none",
-				top: 10,
-				left: 310,
+				top: 280,
+				left: 60,
 			},
 			pic: "img/double_shot_locked.png",
 			condition: "locked",
@@ -223,8 +270,8 @@ function createVueObjects() {
 			shotStyle: {
 				position: "absolute",
 				border: "none",
-				top: 10,
-				left: 410,
+				top: 280,
+				left: 260,
 			},
 			pic: "img/triple_shot_locked.png",
 			condition: "locked",
@@ -271,8 +318,8 @@ function createVueObjects() {
 			shotStyle: {
 				position: "absolute",
 				border: "none",
-				top: 10,
-				left: 510,
+				top: 280,
+				left: 540,
 			},
 			pic: "img/pierce1_locked.png",
 			condition: "locked",
@@ -325,8 +372,8 @@ function createVueObjects() {
 			shotStyle: {
 				position: "absolute",
 				border: "none",
-				top: 10,
-				left: 610,
+				top: 280,
+				left: 740,
 			},
 			pic: "img/pierce2_locked.png",
 			condition: "locked",
@@ -367,62 +414,14 @@ function createVueObjects() {
 		}
 	});
 	
-	GHOST_OBJ = new Vue({
-		el: '#ghost',
-		data: {
-			shotStyle: {
-				position: "absolute",
-				border: "none",
-				top: 10,
-				left: 710,
-			},
-			pic: "img/ghost_ball_locked.png",
-			condition: "locked",
-			price: 10000
-		},
-		methods: {
-			handleClick: function() {
-				switch(this.condition) {
-					case "locked": {
-						if (SCORE_OBJ.score >= this.price) {
-							SCORE_OBJ.score -= this.price;
-							this.pic = "img/ghost_ball.png";
-							this.condition = "unlocked";
-							console.log("unlocked ghost shot");
-						}
-						break;
-					}
-					case "unlocked": {
-						if (NUM_EQUIPPED < 3) {
-							this.condition = "equipped";
-							this.shotStyle.border = "solid blue 10px"
-							NUM_EQUIPPED += 1;
-							GHOST_SNOWBALL = true;
-							console.log("equipped ghost shot");
-						}
-						break;
-					}
-					case "equipped": {
-						NUM_EQUIPPED -= 1;
-						GHOST_SNOWBALL = false;
-						this.shotStyle.border = "none";
-						this.condition = "unlocked";
-						console.log("unequipped ghost shot");
-						
-					}
-				}
-			}
-		}
-	});
-	
 	LARGE_OBJ = new Vue({
 		el: '#largeBall',
 		data: {
 			shotStyle: {
 				position: "absolute",
 				border: "none",
-				top: 10,
-				left: 710,
+				top: 430,
+				left: 60,
 			},
 			pic: "img/large_locked.png",
 			condition: "locked",
@@ -475,8 +474,8 @@ function createVueObjects() {
 			shotStyle: {
 				position: "absolute",
 				border: "none",
-				top: 10,
-				left: 810,
+				top: 430,
+				left: 260,
 			},
 			pic: "img/huge_locked.png",
 			condition: "locked",
@@ -523,8 +522,8 @@ function createVueObjects() {
 			shotStyle: {
 				position: "absolute",
 				border: "none",
-				top: 110,
-				left: 10,
+				top: 430,
+				left: 540,
 			},
 			pic: "img/fast1_locked.png",
 			condition: "locked",
@@ -577,8 +576,8 @@ function createVueObjects() {
 			shotStyle: {
 				position: "absolute",
 				border: "none",
-				top: 110,
-				left: 110,
+				top: 430,
+				left: 740,
 			},
 			pic: "img/fast2_locked.png",
 			condition: "locked",

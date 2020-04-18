@@ -46,54 +46,62 @@
       </div>
     </div>
 	<div class='store'>
-		<h1> Welcome to the store</h1>
-		<p> Here, you can use points to unlock upgrades and cosmetics</p1>
-		<p> Clicking on a locked item will unlock the item for future use.</p>
-		<p> You can equip or unequip an unlocked item by selecting it. Note: You may only equip up to 3 snowball upgrades at a time</p>
-		<p> Most upgrades are stronger versions of another upgrade. In order to use these, you must first unlock and equip the weaker version.
-		<img src='img/store.jpg' style="width: 100%;">
+		<div id = "instructions">
+			<ul>
+			<li> Here, you can use points to unlock upgrades and cosmetics.
+			<li> Clicking on a locked item will unlock the item for future use.
+			<li> You can equip or unequip an unlocked item by selecting it. Note: You may only equip up to 3 snowball upgrades at a time
+			<li> Most upgrades are stronger versions of another upgrade. In order to use these, you must first unlock and equip the weaker version.</ul>
+		</div>
+		<img src='img/store.jpg' style="width: 100%; position: absolute; top: 12px; opacity: 50%;">
 		<div id='outfit1' v-bind:style='outfitStyle'>
 			<button v-on:click="handleClick"><img class='outfit1' style="width: 80px; height: 80px;" v-bind:src="pic"/></button>
+			<p> Michigan Snowman </p>
 		</div>
 		<div id='outfit2' v-bind:style='outfitStyle'>
 			<button v-on:click="handleClick"><img class='outfit2' style="width: 80px; height: 80px; background-color: transparent" v-bind:src="pic"/></button>
+			<p> Schlissel </p>
 		</div>
 		<div id='moreLives' v-bind:style='lifeStyle'>
 			<button v-on:click="handleClick"><img class='moreLives' style="width: 80px; height: 80px;" v-bind:src="pic"/></button>
-		</div>
-		<div id='doubleShot' v-bind:style='shotStyle'>
-			<button v-on:click="handleClick"><img class='doubleShot' id='dsbut' style="width: 80px; height: 80px;" v-bind:src="pic"/></button>
-			
-		</div>
-			
-		<div id='tripleShot' v-bind:style='shotStyle'>
-			<button v-on:click="handleClick"><img class='tripleShot' style="width: 80px; height: 80px;" v-bind:src="pic"/></button>
-		</div>
-		<div id='piercing1' v-bind:style='shotStyle'>
-			<button v-on:click="handleClick"><img class='piercing1' style="width: 80px; height: 80px;" v-bind:src="pic"/></button>
-		</div>
-		<div id='piercing2' v-bind:style='shotStyle'>
-			<button v-on:click="handleClick"><img class='piercing2' style="width: 80px; height: 80px;" v-bind:src="pic"/></button>
+			<p> +1 Life</p>
 		</div>
 		<div id='ghost' v-bind:style='shotStyle'>
 			<button v-on:click="handleClick"><img class='ghost' style="width: 80px; height: 80px;" v-bind:src="pic"/></button>
+			<p> Phasing </p>
 		</div>
+		<div id='doubleShot' v-bind:style='shotStyle'>
+			<button v-on:click="handleClick"><img class='doubleShot' style="width: 80px; height: 80px;" v-bind:src="pic"/></button>
+			<p> Double Shot</p>
+		</div>
+		<div id='tripleShot' v-bind:style='shotStyle'>
+			<button v-on:click="handleClick"><img class='tripleShot' style="width: 80px; height: 80px;" v-bind:src="pic"/></button>
+			<p> Triple Shot</p>
+		</div>
+		<div id='piercing1' v-bind:style='shotStyle'>
+			<button v-on:click="handleClick"><img class='piercing1' style="width: 80px; height: 80px;" v-bind:src="pic"/></button>
+			<p> Piercing 1 </p>
+		</div>
+		<div id='piercing2' v-bind:style='shotStyle'>
+			<button v-on:click="handleClick"><img class='piercing2' style="width: 80px; height: 80px;" v-bind:src="pic"/></button>
+			<p> Piercing 2 </p>
+		</div>
+		
 		<div id='largeBall' v-bind:style='shotStyle'>
 			<button v-on:click="handleClick"><img class='largeBall' style="width: 80px; height: 80px;" v-bind:src="pic"/></button>
+			<p> Large Snowball</p>
 		</div>
 		<div id='hugeBall' v-bind:style='shotStyle'>
 			<button v-on:click="handleClick"><img class='hugeBall' style="width: 80px; height: 80px;" v-bind:src="pic"/></button>
+			<p> Huge Snowball</p>
 		</div>
 		<div id='fast1' v-bind:style='shotStyle'>
 			<button v-on:click="handleClick"><img class='fast1' style="width: 80px; height: 80px;" v-bind:src="pic"/></button>
+			<p> Faster Firing 1</p>
 		</div>
-		<!--<div id="this_one">-->
 		<div id='fast2' v-bind:style='shotStyle'>
 			<button class="trigger" v-on:click="handleClick"><img class='fast2' style="width: 80px; height: 80px;" v-bind:src="pic"/></button>
-			<!--<div class="hidden">
-				This message shows up.
-			</div>
-		</div>-->
+			<p> Faster Firing 2</p>
 		</div>
 		<button onclick="closeStore()" id='close_button'> close store </button>
 	</div>
