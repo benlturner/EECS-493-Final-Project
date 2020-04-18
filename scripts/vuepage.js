@@ -19,10 +19,8 @@ function createVueObjects() {
             snowmanStyle: {
                 top: null,
                 left: 122,
-                ary: new Array(1,2,3)
-            },
-            ammo: 100,
-            status: 0
+                lives: 1
+            }
         }
     });
 }
