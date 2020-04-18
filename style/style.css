@@ -40,8 +40,35 @@ body {
 }
 
 #store {
-	display: none;
+	/*display: none;*/
 }
+
+#open_button {
+	height: 40px; 
+	width: 100px; 
+	font-size: 16px; 
+	position: relative;
+	top: 50px;
+}
+
+#close_button {
+	height: 40px; 
+	width: 100px; 
+	font-size: 16px; 
+	position: relative;
+	top: -100px;
+	display: block;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+.hidden { 
+display: none; 
+position: absolute;
+left: -30;
+background-color: gray;
+}
+.trigger:hover + .hidden { display: inline; }
 
 #winner {
 	text-align: center;

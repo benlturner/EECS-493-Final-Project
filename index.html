@@ -22,7 +22,7 @@
     <div id="levelScreen" style="left: 380; position:relative; top: 200;">
       <h1 id='level'><i>Level {{level}}</i></h1>
       <div id="store" v-if="level > 1">
-        <button onclick="openStore()"> visit store </button>
+        <button id='open_button' onclick="openStore()"> visit store </button>
       </div>
     </div>
 	<div id="winner" style="position: relative; top: 200;">
@@ -42,12 +42,53 @@
 	</div>
     <div class='game-window' style="background-image: url('img/background.png')">
       <div id='enterprise' class='snowman' v-bind:style='snowmanStyle'>
-        <img class='snowman' src='img/defaultSnowman.png'/>
+        <img class='snowman' v-bind:src="snowmanStyle.pic"/>
       </div>
     </div>
 	<div class='store'>
 		<img src='img/store.jpg' style="width: 100%;">
-    <button onclick="closeStore()"> close store </button>
+		<div id='outfit1' v-bind:style='outfitStyle'>
+			<button v-on:click="handleClick"><img class='outfit1' style="width: 80px; height: 80px;" v-bind:src="pic"/></button>
+		</div>
+		<div id='outfit2' v-bind:style='outfitStyle'>
+			<button v-on:click="handleClick"><img class='outfit2' style="width: 80px; height: 80px;" v-bind:src="pic"/></button>
+		</div>
+		<div id='moreLives' v-bind:style='lifeStyle'>
+			<button v-on:click="handleClick"><img class='moreLives' style="width: 80px; height: 80px;" v-bind:src="pic"/></button>
+		</div>
+		<div id='doubleShot' v-bind:style='shotStyle'>
+			<button v-on:click="handleClick"><img class='doubleShot' id='dsbut' style="width: 80px; height: 80px;" v-bind:src="pic"/></button>
+			
+		</div>
+			
+		<div id='tripleShot' v-bind:style='shotStyle'>
+			<button v-on:click="handleClick"><img class='tripleShot' style="width: 80px; height: 80px;" v-bind:src="pic"/></button>
+		</div>
+		<div id='piercing1' v-bind:style='shotStyle'>
+			<button v-on:click="handleClick"><img class='piercing1' style="width: 80px; height: 80px;" v-bind:src="pic"/></button>
+		</div>
+		<div id='piercing2' v-bind:style='shotStyle'>
+			<button v-on:click="handleClick"><img class='piercing2' style="width: 80px; height: 80px;" v-bind:src="pic"/></button>
+		</div>
+		<div id='ghost' v-bind:style='shotStyle'>
+			<button v-on:click="handleClick"><img class='ghost' style="width: 80px; height: 80px;" v-bind:src="pic"/></button>
+		</div>
+		<div id='largeBall' v-bind:style='shotStyle'>
+			<button v-on:click="handleClick"><img class='largeBall' style="width: 80px; height: 80px;" v-bind:src="pic"/></button>
+		</div>
+		<div id='hugeBall' v-bind:style='shotStyle'>
+			<button v-on:click="handleClick"><img class='hugeBall' style="width: 80px; height: 80px;" v-bind:src="pic"/></button>
+		</div>
+		<div id='fast1' v-bind:style='shotStyle'>
+			<button v-on:click="handleClick"><img class='fast1' style="width: 80px; height: 80px;" v-bind:src="pic"/></button>
+		</div>
+		<div id='fast2' v-bind:style='shotStyle'>
+			<button class="trigger" v-on:click="handleClick"><img class='fast2' style="width: 80px; height: 80px;" v-bind:src="pic"/></button>
+			<div class="hidden">
+				This message shows up.
+			</div>
+		</div>
+		<button onclick="closeStore()" id='close_button'> close store </button>
 	</div>
   <div class="items">
   </div>
