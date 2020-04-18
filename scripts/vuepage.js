@@ -1,11 +1,11 @@
 function createVueObjects() {
-    new Vue({
-		el: 'body',
+    /*new Vue({
+		el: '#this_one',
 		data: {
 			active: false
 		}
 		})
-	
+	*/
 	SCORE_OBJ = new Vue({
         el: '#score',
         data: {

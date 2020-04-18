@@ -46,12 +46,17 @@
       </div>
     </div>
 	<div class='store'>
+		<h1> Welcome to the store</h1>
+		<p> Here, you can use points to unlock upgrades and cosmetics</p1>
+		<p> Clicking on a locked item will unlock the item for future use.</p>
+		<p> You can equip or unequip an unlocked item by selecting it. Note: You may only equip up to 3 snowball upgrades at a time</p>
+		<p> Most upgrades are stronger versions of another upgrade. In order to use these, you must first unlock and equip the weaker version.
 		<img src='img/store.jpg' style="width: 100%;">
 		<div id='outfit1' v-bind:style='outfitStyle'>
 			<button v-on:click="handleClick"><img class='outfit1' style="width: 80px; height: 80px;" v-bind:src="pic"/></button>
 		</div>
 		<div id='outfit2' v-bind:style='outfitStyle'>
-			<button v-on:click="handleClick"><img class='outfit2' style="width: 80px; height: 80px;" v-bind:src="pic"/></button>
+			<button v-on:click="handleClick"><img class='outfit2' style="width: 80px; height: 80px; background-color: transparent" v-bind:src="pic"/></button>
 		</div>
 		<div id='moreLives' v-bind:style='lifeStyle'>
 			<button v-on:click="handleClick"><img class='moreLives' style="width: 80px; height: 80px;" v-bind:src="pic"/></button>
@@ -82,11 +87,13 @@
 		<div id='fast1' v-bind:style='shotStyle'>
 			<button v-on:click="handleClick"><img class='fast1' style="width: 80px; height: 80px;" v-bind:src="pic"/></button>
 		</div>
+		<!--<div id="this_one">-->
 		<div id='fast2' v-bind:style='shotStyle'>
 			<button class="trigger" v-on:click="handleClick"><img class='fast2' style="width: 80px; height: 80px;" v-bind:src="pic"/></button>
-			<div class="hidden">
+			<!--<div class="hidden">
 				This message shows up.
 			</div>
+		</div>-->
 		</div>
 		<button onclick="closeStore()" id='close_button'> close store </button>
 	</div>

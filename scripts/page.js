@@ -80,7 +80,6 @@ var KEYS = {
 $(document).ready( function() {
   // Now that the elements have loaded, populate with Vue.js
   createVueObjects();
-
   console.log("Ready!");
 
   // Set global handles (now that the page is loaded)
