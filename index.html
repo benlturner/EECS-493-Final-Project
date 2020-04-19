@@ -56,52 +56,52 @@
 		<img src='img/store.jpg' style="width: 100%; position: absolute; top: 12px; opacity: 50%;">
 		<div id='outfit1' v-bind:style='outfitStyle'>
 			<button v-on:click="handleClick"><img class='outfit1' style="width: 80px; height: 80px;" v-bind:src="pic"/></button>
-			<p> Michigan Snowman </br> cost: {{price}} </p>
+			<p style="text-align: center; position: relative; left: -20px"> Michigan Snowman </br> cost: {{price}} </p>
 		</div>
 		<div id='outfit2' v-bind:style='outfitStyle'>
 			<button v-on:click="handleClick"><img class='outfit2' style="width: 80px; height: 80px; background-color: transparent" v-bind:src="pic"/></button>
-			<p> Schlissel </br> cost: {{price}} </p>
+			<p style="text-align: center; position: relative;"> Schlissel </br> cost: {{price}} </p>
 		</div>
 		<div id='moreLives' v-bind:style='lifeStyle'>
 			<button v-on:click="handleClick"><img class='moreLives' style="width: 80px; height: 80px;" v-bind:src="pic"/></button>
-			<p> +1 Life </br> cost: {{price}} </p>
+			<p style="text-align: center; position: relative;"> +1 Life </br> cost: {{price}} </p>
 		</div>
 		<div id='ghost' v-bind:style='shotStyle'>
 			<button v-on:click="handleClick"><img class='ghost' style="width: 80px; height: 80px;" v-bind:src="pic"/></button>
-			<p> Phasing </br> cost: {{price}} </p>
+			<p style="text-align: center; position: relative;"> Phasing </br> cost: {{price}} </p>
 		</div>
 		<div id='doubleShot' v-bind:style='shotStyle'>
 			<button v-on:click="handleClick"><img class='doubleShot' style="width: 80px; height: 80px;" v-bind:src="pic"/></button>
-			<p> Double Shot </br> cost: {{price}} </p>
+			<p style="text-align: center; position: relative;"> Double Shot </br> cost: {{price}} </p>
 		</div>
 		<div id='tripleShot' v-bind:style='shotStyle'>
 			<button v-on:click="handleClick"><img class='tripleShot' style="width: 80px; height: 80px;" v-bind:src="pic"/></button>
-			<p> Triple Shot </br> cost: {{price}} </p>
+			<p style="text-align: center; position: relative;"> Triple Shot </br> cost: {{price}} </p>
 		</div>
 		<div id='piercing1' v-bind:style='shotStyle'>
 			<button v-on:click="handleClick"><img class='piercing1' style="width: 80px; height: 80px;" v-bind:src="pic"/></button>
-			<p> Piercing 1 </br> cost: {{price}} </p>
+			<p style="text-align: center; position: relative;"> Piercing 1 </br> cost: {{price}} </p>
 		</div>
 		<div id='piercing2' v-bind:style='shotStyle'>
 			<button v-on:click="handleClick"><img class='piercing2' style="width: 80px; height: 80px;" v-bind:src="pic"/></button>
-			<p> Piercing 2 </br> cost: {{price}} </p>
+			<p style="text-align: center; position: relative;"> Piercing 2 </br> cost: {{price}} </p>
 		</div>
 		
 		<div id='largeBall' v-bind:style='shotStyle'>
 			<button v-on:click="handleClick"><img class='largeBall' style="width: 80px; height: 80px;" v-bind:src="pic"/></button>
-			<p> Large Snowball </br> cost: {{price}} </p>
+			<p style="text-align: center; position: relative; left: -6px"> Large Snowball </br> cost: {{price}} </p>
 		</div>
 		<div id='hugeBall' v-bind:style='shotStyle'>
 			<button v-on:click="handleClick"><img class='hugeBall' style="width: 80px; height: 80px;" v-bind:src="pic"/></button>
-			<p> Huge Snowball </br> cost: {{price}} </p>
+			<p style="text-align: center; position: relative; left: -4px"> Huge Snowball </br> cost: {{price}} </p>
 		</div>
 		<div id='fast1' v-bind:style='shotStyle'>
 			<button v-on:click="handleClick"><img class='fast1' style="width: 80px; height: 80px;" v-bind:src="pic"/></button>
-			<p> Faster Firing 1 </br> cost: {{price}} </p>
+			<p style="text-align: center; position: relative; left: -4px"> Faster Firing 1 </br> cost: {{price}} </p>
 		</div>
 		<div id='fast2' v-bind:style='shotStyle'>
 			<button class="trigger" v-on:click="handleClick"><img class='fast2' style="width: 80px; height: 80px;" v-bind:src="pic"/></button>
-			<p> Faster Firing 2 </br> cost: {{price}} </p>
+			<p style="text-align: center; position: relative; left: -4px"> Faster Firing 2 </br> cost: {{price}} </p>
 		</div>
 		<button onclick="closeStore()" id='close_button'> close store </button>
 	</div>
